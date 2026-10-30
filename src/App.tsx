@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import {
   Search,
   Sun,
@@ -42,19 +42,37 @@ import {
   CategoryId,
   ComponentSpec,
 } from './data/catalog';
-import { CommandFinderModal } from './components/CommandFinderModal';
-import { DesignTokenExporter } from './components/DesignTokenExporter';
-import { AccessibilityAriaSection } from './components/AccessibilityAriaSection';
-import { Category1Inputs } from './components/Category1Inputs';
-import { Category2DataDisplay } from './components/Category2DataDisplay';
-import { Category3And4FeedbackSurfaces } from './components/Category3And4FeedbackSurfaces';
-import { Category5And6NavLayout } from './components/Category5And6NavLayout';
-import { Category7EnterpriseX } from './components/Category7EnterpriseX';
-import { Category8SignatureBlocks } from './components/Category8SignatureBlocks';
-import { JX290LibraryExplorer } from './components/JX290LibraryExplorer';
 import { ComponentSpec290 } from './data/catalog290';
 import { UNIFIED_CATEGORIES_18 } from './data/unifiedCatalog';
-import { GitHubPage } from './components/GitHubPage';
+
+// Phase 1: High-Performance Code-Splitting via React.lazy
+const CommandFinderModal = lazy(() => import('./components/CommandFinderModal').then((m) => ({ default: m.CommandFinderModal })));
+const DesignTokenExporter = lazy(() => import('./components/DesignTokenExporter').then((m) => ({ default: m.DesignTokenExporter })));
+const AccessibilityAriaSection = lazy(() => import('./components/AccessibilityAriaSection').then((m) => ({ default: m.AccessibilityAriaSection })));
+const Category1Inputs = lazy(() => import('./components/Category1Inputs').then((m) => ({ default: m.Category1Inputs })));
+const Category2DataDisplay = lazy(() => import('./components/Category2DataDisplay').then((m) => ({ default: m.Category2DataDisplay })));
+const Category3And4FeedbackSurfaces = lazy(() => import('./components/Category3And4FeedbackSurfaces').then((m) => ({ default: m.Category3And4FeedbackSurfaces })));
+const Category5And6NavLayout = lazy(() => import('./components/Category5And6NavLayout').then((m) => ({ default: m.Category5And6NavLayout })));
+const Category7EnterpriseX = lazy(() => import('./components/Category7EnterpriseX').then((m) => ({ default: m.Category7EnterpriseX })));
+const Category8SignatureBlocks = lazy(() => import('./components/Category8SignatureBlocks').then((m) => ({ default: m.Category8SignatureBlocks })));
+const JX290LibraryExplorer = lazy(() => import('./components/JX290LibraryExplorer').then((m) => ({ default: m.JX290LibraryExplorer })));
+const GitHubPage = lazy(() => import('./components/GitHubPage').then((m) => ({ default: m.GitHubPage })));
+
+const SectionSkeletonFallback: React.FC<{ label?: string }> = ({
+  label = 'Loading component suite...',
+}) => (
+  <div className="w-full min-h-[300px] rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/70 dark:border-slate-800 flex flex-col items-center justify-center p-8 text-center animate-pulse">
+    <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center mb-3 text-indigo-600 dark:text-indigo-400">
+      <Sparkles className="w-4 h-4 animate-spin" />
+    </div>
+    <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300">
+      {label}
+    </span>
+    <span className="text-[10px] text-slate-400 font-mono mt-1">
+      Zero CLS Dynamic Chunk Loading
+    </span>
+  </div>
+);
 
 const RADIUS_OPTIONS: { id: RadiusScale; label: string; scaleLabel: string }[] = [
   { id: 'sharp', label: 'Sharp (0px)', scaleLabel: '0.5x' },
@@ -588,20 +606,22 @@ const WorkbenchShell: React.FC = () => {
 
         {/* Main Content Body: Switch between GitHub Showcase Page and Interactive Workbench */}
         {currentView === 'github-page' ? (
-          <GitHubPage
-            onBackToWorkbench={() => {
-              setCurrentView('workbench');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onNavigateToCategory={(catId) => {
-              setCurrentView('workbench');
-              setSelectedExplorerCatId(catId);
-              setTimeout(() => {
-                const el = document.getElementById('jx-290-component-suite');
-                el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 80);
-            }}
-          />
+          <Suspense fallback={<SectionSkeletonFallback label="Loading GitHub Showcase & Docs..." />}>
+            <GitHubPage
+              onBackToWorkbench={() => {
+                setCurrentView('workbench');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onNavigateToCategory={(catId) => {
+                setCurrentView('workbench');
+                setSelectedExplorerCatId(catId);
+                setTimeout(() => {
+                  const el = document.getElementById('jx-290-component-suite');
+                  el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 80);
+              }}
+            />
+          </Suspense>
         ) : (
           <main className="w-full flex-1 px-4 sm:px-8 py-6 sm:py-8 space-y-8 sm:space-y-12 max-w-7xl mx-auto">
           {/* Top Specular Ambient Glow Layer */}
@@ -1108,7 +1128,8 @@ const WorkbenchShell: React.FC = () => {
           </AnimatePresence>
 
           {/* 3. LIVE COMPONENT SHOWCASE & INTERACTIVE PLAYGROUND */}
-          <div id="interactive-playground" className="space-y-12">
+          <Suspense fallback={<SectionSkeletonFallback label="Hydrating interactive component showcase batches..." />}>
+            <div id="interactive-playground" className="space-y-12">
             {/* Category 1: Inputs */}
             {(activeCategory === 'all' || activeCategory === 'inputs') && (
               <section className="space-y-4">
@@ -1267,40 +1288,49 @@ const WorkbenchShell: React.FC = () => {
               </section>
             )}
           </div>
+          </Suspense>
 
           {/* 351 Master Component Suite Explorer (18 Categories • Showcases + Primitives) */}
-          <JX290LibraryExplorer
-            initialCategoryId={selectedExplorerCatId}
-            initialComponentId={selectedExplorerCompId}
-            onJumpToShowcase={(specNumber) => {
-              const spec = COMPONENT_CATALOG.find((s) => s.number === specNumber);
-              if (spec) handleJumpToComponent(spec);
-            }}
-          />
+          <Suspense fallback={<SectionSkeletonFallback label="Loading 351 Component Suite Explorer..." />}>
+            <JX290LibraryExplorer
+              initialCategoryId={selectedExplorerCatId}
+              initialComponentId={selectedExplorerCompId}
+              onJumpToShowcase={(specNumber) => {
+                const spec = COMPONENT_CATALOG.find((s) => s.number === specNumber);
+                if (spec) handleJumpToComponent(spec);
+              }}
+            />
+          </Suspense>
 
           {/* Design Token Exporter Module */}
-          <div id="jx-design-token-exporter" className="scroll-mt-20">
-            <DesignTokenExporter />
-          </div>
+          <Suspense fallback={null}>
+            <div id="jx-design-token-exporter" className="scroll-mt-20">
+              <DesignTokenExporter />
+            </div>
+          </Suspense>
 
           {/* Accessibility & ARIA Standards WCAG 2.1 AA Checklist */}
-          <div id="jx-accessibility-aria-standards" className="scroll-mt-20">
-            <AccessibilityAriaSection onJumpToComponent={handleJumpToComponent} />
-          </div>
+          <Suspense fallback={null}>
+            <div id="jx-accessibility-aria-standards" className="scroll-mt-20">
+              <AccessibilityAriaSection onJumpToComponent={handleJumpToComponent} />
+            </div>
+          </Suspense>
         </main>
       )}
       </div>
 
       {/* Global Cmd+K Component Finder / JX Spotlight Modal */}
-      <CommandFinderModal
-        open={cmdOpen}
-        onClose={() => setCmdOpen(false)}
-        onSelectComponent={handleJumpToComponent}
-        onSelect290Component={handleSelect290Component}
-        onSelectCategory={setActiveCategory}
-        onNavigateToSection={handleNavigateToSection}
-        onToggleEncyclopedia={handleToggleEncyclopedia}
-      />
+      <Suspense fallback={null}>
+        <CommandFinderModal
+          open={cmdOpen}
+          onClose={() => setCmdOpen(false)}
+          onSelectComponent={handleJumpToComponent}
+          onSelect290Component={handleSelect290Component}
+          onSelectCategory={setActiveCategory}
+          onNavigateToSection={handleNavigateToSection}
+          onToggleEncyclopedia={handleToggleEncyclopedia}
+        />
+      </Suspense>
     </div>
   );
 };
