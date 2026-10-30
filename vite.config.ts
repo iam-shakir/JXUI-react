@@ -65,8 +65,11 @@ function githubPagesHelperPlugin(): Plugin {
 }
 
 export default defineConfig(() => {
+  const isVercel = Boolean(process.env.VERCEL);
+  const base = isVercel ? '/' : (process.env.BASE_PATH || '/JXUI-react/');
+
   return {
-    base: '/JXUI-react/',
+    base,
     plugins: [
       react(),
       tailwindcss(),
