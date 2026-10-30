@@ -1,0 +1,22 @@
+// ============================================================================
+// JXUI Unified Master Component Barrel
+// 351 Total Primitives: 61 Interactive Showcases (System A) + 290 Modular Primitives (System B)
+// ============================================================================
+
+// --- System A: 61 Interactive Showcase Components ---
+export * from './inputs';
+export * from './data-display';
+export * from './feedback';
+export * from './surfaces';
+export * from './navigation';
+export * from './layout-utils';
+
+// --- System B: 290 Modular Primitives (18 Categories) ---
+export * from './library';
+
+// --- Interactive Workbench & Documentation Tooling ---
+export * from './ComponentDocumentation';
+export * from './CommandFinderModal';
+export * from './DesignTokenExporter';
+export * from './AccessibilityAriaSection';
+export * from './JX290LibraryExplorer';
