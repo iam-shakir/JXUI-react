@@ -352,17 +352,18 @@ const WorkbenchShell: React.FC = () => {
             <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-black/20 text-emerald-600 dark:text-emerald-400 font-bold">v2.4</span>
           </button>
 
-          {/* 8 Batches */}
-          {CATEGORIES.map((cat) => {
-            const Icon = CATEGORY_ICONS[cat.id] || Box;
-            const subItems = CATEGORY_SUB_ITEMS[cat.id] || [];
+          {/* Unified 18 categories */}
+          {UNIFIED_CATEGORIES_18.map((cat) => {
+            const Icon = CATEGORY_ICONS[cat.id as CategoryId] || Box;
+            const subItems = CATEGORY_SUB_ITEMS[cat.id as CategoryId] || [];
             const isCatActive = activeCategory === cat.id;
 
             return (
               <div key={cat.id} className="space-y-1">
                 <div
                   onClick={() => {
-                    setActiveCategory(cat.id);
+                    setSelectedExplorerCatId(cat.id);
+                    handleNavigateToSection('jx-290-component-suite');
                   }}
                   className={`px-2 py-1 flex items-center justify-between rounded-lg cursor-pointer transition-colors ${
                     isCatActive
@@ -374,7 +375,7 @@ const WorkbenchShell: React.FC = () => {
                     <Icon className="w-3.5 h-3.5" />
                     <span>{cat.shortTitle}</span>
                   </span>
-                  <span className="font-mono text-[10px] opacity-75">{cat.count}</span>
+                  <span className="font-mono text-[10px] opacity-75">{cat.totalCount}</span>
                 </div>
 
                 <div className="space-y-0.5 pl-3 border-l border-slate-200/70 dark:border-slate-800 ml-2">
