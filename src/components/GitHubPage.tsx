@@ -120,20 +120,25 @@ export const GitHubPage: React.FC<GitHubPageProps> = ({
           <div className="flex items-center gap-2 text-sm sm:text-base">
             <Github className="w-6 h-6 text-white shrink-0" />
             <a
-              href="https://github.com/jxui"
+              href="https://github.com/iam-shakir"
               target="_blank"
               rel="noreferrer"
               className="text-[#58a6ff] hover:underline font-normal"
             >
-              jxui
+              iam-shakir
             </a>
             <span className="text-[#8b949e]">/</span>
-            <span className="text-white font-semibold flex items-center gap-2">
-              react
+            <a
+              href="https://github.com/iam-shakir/JXUI-react"
+              target="_blank"
+              rel="noreferrer"
+              className="text-white hover:underline font-semibold flex items-center gap-2"
+            >
+              JXUI-react
               <span className="px-2 py-0.5 text-[11px] font-medium rounded-full border border-[#30363d] text-[#8b949e] bg-[#21262d]">
                 Public
               </span>
-            </span>
+            </a>
           </div>
 
           {/* GitHub Action Pill Controls */}
@@ -672,7 +677,7 @@ jobs:
                 Interactive Workbench
               </button>
             )}
-            <a href="https://github.com/jxui/react" target="_blank" rel="noreferrer" className="hover:text-white">
+            <a href="https://github.com/iam-shakir/JXUI-react" target="_blank" rel="noreferrer" className="hover:text-white">
               GitHub Repository
             </a>
             <a href="https://www.npmjs.com/package/@jxui/react" target="_blank" rel="noreferrer" className="hover:text-white">

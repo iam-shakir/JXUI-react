@@ -11,8 +11,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/jxui/react/actions"><img src="https://img.shields.io/badge/build-passing-brightgreen?style=flat-square&logo=github-actions" alt="Build Status" /></a>
-  <a href="https://github.com/jxui/react"><img src="https://img.shields.io/badge/tests-13%2F13%20passing-brightgreen?style=flat-square" alt="Tests" /></a>
+  <a href="https://github.com/iam-shakir/JXUI-react/actions"><img src="https://img.shields.io/badge/build-passing-brightgreen?style=flat-square&logo=github-actions" alt="Build Status" /></a>
+  <a href="https://github.com/iam-shakir/JXUI-react"><img src="https://img.shields.io/badge/tests-13%2F13%20passing-brightgreen?style=flat-square" alt="Tests" /></a>
+  <a href="https://iam-shakir.github.io/JXUI-react/"><img src="https://img.shields.io/badge/demo-live%20workbench-indigo?style=flat-square" alt="Live Demo" /></a>
   <a href="https://react.dev"><img src="https://img.shields.io/badge/react-19.0.0-blue?style=flat-square&logo=react" alt="React 19" /></a>
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/typescript-strict%20100%25-blue?style=flat-square&logo=typescript" alt="TypeScript Strict" /></a>
   <a href="https://www.w3.org/WAI/WCAG21/quickref/"><img src="https://img.shields.io/badge/wcag-2.1%20AA%2FAAA-purple?style=flat-square" alt="WCAG 2.1 AA/AAA" /></a>
