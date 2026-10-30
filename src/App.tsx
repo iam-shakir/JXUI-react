@@ -322,27 +322,7 @@ const WorkbenchShell: React.FC = () => {
 
         {/* Category Batches Nav List */}
         <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 text-xs">
-          {/* All Components reset pill */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveCategory('all');
-              setMobileSidebarOpen(false);
-            }}
-            className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
-              activeCategory === 'all'
-                ? 'bg-indigo-600 text-white font-semibold shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>All 61 Components</span>
-            </span>
-            <span className="font-mono text-[10px]">61</span>
-          </button>
-
-          {/* 290-Component Suite Quick Jump */}
+          {/* Unified component library quick jump */}
           <button
             type="button"
             onClick={() => handleNavigateToSection('jx-290-component-suite')}
@@ -350,9 +330,9 @@ const WorkbenchShell: React.FC = () => {
           >
             <span className="flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-              <span>290 Suite (18 Cats)</span>
+              <span>Unified Components</span>
             </span>
-            <span className="font-mono text-[10px] px-1.5 py-0.2 bg-indigo-200/80 dark:bg-indigo-800 rounded-full font-bold">290</span>
+            <span className="font-mono text-[10px] px-1.5 py-0.2 bg-indigo-200/80 dark:bg-indigo-800 rounded-full font-bold">351</span>
           </button>
 
           {/* Official GitHub Page & Showcase Jump */}
@@ -1105,8 +1085,8 @@ const WorkbenchShell: React.FC = () => {
             )}
           </AnimatePresence>
 
-          {/* 3. LIVE COMPONENT SHOWCASE & INTERACTIVE PLAYGROUND */}
-          <div id="interactive-playground" className="space-y-12">
+          {false && (
+            <div id="interactive-playground" className="space-y-12">
             {/* Category 1: Inputs */}
             {(activeCategory === 'all' || activeCategory === 'inputs') && (
               <section className="space-y-4">
@@ -1264,9 +1244,10 @@ const WorkbenchShell: React.FC = () => {
                 <Category8SignatureBlocks />
               </section>
             )}
-          </div>
+            </div>
+          )}
 
-          {/* 351 Master Component Suite Explorer (18 Categories • Showcases + Primitives) */}
+          {/* Unified Component Library (Showcases + Primitives) */}
           <JX290LibraryExplorer
             initialCategoryId={selectedExplorerCatId}
             initialComponentId={selectedExplorerCompId}
