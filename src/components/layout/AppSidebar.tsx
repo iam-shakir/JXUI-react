@@ -3,105 +3,93 @@ import {
   Search,
   Sparkles,
   Github,
-  Box,
-  ArrowUpRight,
-  ShieldCheck,
-  X,
-  Sliders,
-  BarChart3,
-  Bell,
+  Star,
+  Zap,
   Layers,
   Compass,
+  Sliders,
+  CheckCircle2,
+  Box,
+  Bell,
   LayoutGrid,
+  BarChart3,
+  Table,
+  Volume2,
+  Columns,
   Workflow,
+  Lock,
+  FileCode,
+  Clock,
+  ShieldCheck,
+  X,
+  BookOpen,
+  Palette,
+  Check,
 } from 'lucide-react';
-import { CATEGORIES, CategoryId } from '../../data/catalog';
+import { UNIFIED_CATEGORIES_18, UnifiedCategorySpec } from '../../data/unifiedCatalog';
+import { useJXTheme } from '../../context/JXThemeContext';
 
 export interface AppSidebarProps {
-  activeCategory: CategoryId | 'all';
-  onSelectCategory: (cat: CategoryId | 'all') => void;
+  activeCategory: string;
+  onSelectCategory: (catId: string) => void;
+  activeTier: 'all' | 'showcase' | 'primitive' | 'favorites';
+  onSelectTier: (tier: 'all' | 'showcase' | 'primitive' | 'favorites') => void;
   sidebarQuery: string;
   onSidebarQueryChange: (q: string) => void;
   filteredCount: number;
+  totalCount: number;
+  favoritesCount: number;
   mobileSidebarOpen: boolean;
   onCloseMobileSidebar: () => void;
   currentView: 'workbench' | 'github-page';
   onNavigateToSection: (sectionId: string) => void;
-  onJumpToElementId: (id: string, catId?: CategoryId) => void;
+  onOpenEncyclopedia: () => void;
 }
 
-const CATEGORY_ICONS: Record<CategoryId, React.ComponentType<{ className?: string }>> = {
-  inputs: Sliders,
-  'data-display': BarChart3,
-  feedback: Bell,
-  surfaces: Layers,
+const CATEGORY_ICONS_18: Record<string, React.ComponentType<{ className?: string }>> = {
+  'buttons-actions': Zap,
+  'glass-surfaces': Layers,
   navigation: Compass,
-  'layout-utils': LayoutGrid,
-  'enterprise-x': Sparkles,
-  'signature-blocks': Workflow,
-};
-
-const CATEGORY_SUB_ITEMS: Record<CategoryId, { label: string; id: string }[]> = {
-  inputs: [
-    { label: 'Button & Fab', id: 'jx-button' },
-    { label: 'Checkbox & Switch', id: 'jx-checkbox' },
-    { label: 'TextField & Autocomplete', id: 'jx-text-field' },
-    { label: 'Rating & Sliders', id: 'jx-rating' },
-  ],
-  'data-display': [
-    { label: 'Badge, Chip & Avatar', id: 'jx-badge' },
-    { label: 'Table & Data Grid', id: 'jx-table' },
-    { label: 'Tooltip & Divider', id: 'jx-tooltip' },
-  ],
-  feedback: [
-    { label: 'Alert & Toast Queue', id: 'jx-alert' },
-    { label: 'Spring Dialog & Backdrop', id: 'jx-dialog' },
-    { label: 'Zero-Shift Skeletons', id: 'jx-skeleton' },
-  ],
-  surfaces: [
-    { label: 'Spotlight Bento Card', id: 'jx-card' },
-    { label: 'Spring Accordion', id: 'jx-accordion' },
-    { label: 'Semantic Paper Tiers', id: 'jx-paper' },
-  ],
-  navigation: [
-    { label: 'Pill Tabs & Stepper', id: 'jx-tabs' },
-    { label: 'Navigation Rail & Drawer', id: 'jx-navigation-rail' },
-    { label: 'Breadcrumbs & SpeedDial', id: 'jx-breadcrumbs' },
-  ],
-  'layout-utils': [
-    { label: 'Responsive 12-Col Grid', id: 'jx-grid' },
-    { label: 'FLIP Masonry Packing', id: 'jx-masonry' },
-    { label: 'Audit Timeline Track', id: 'jx-timeline' },
-  ],
-  'enterprise-x': [
-    { label: 'Notion/Linear DataGrid', id: 'jx-data-grid' },
-    { label: 'NL DateRangePicker', id: 'jx-date-range-picker' },
-    { label: 'Magnetic SVG Charts', id: 'jx-charts' },
-  ],
-  'signature-blocks': [
-    { label: 'macOS Magnetic Dock', id: 'jx-dock' },
-    { label: 'Canary Traffic Splitter', id: 'canary-traffic-splitter' },
-    { label: 'Passkey Vault & Waveform', id: 'passkey-vault' },
-  ],
+  'inputs-forms': Sliders,
+  'toggles-selection': CheckCircle2,
+  'modals-overlays': Box,
+  'feedback-notifications': Bell,
+  'loading-progress': Sparkles,
+  'cards-content': LayoutGrid,
+  'data-visualization': BarChart3,
+  'tables-datagrids': Table,
+  'media-audio-visual': Volume2,
+  'layout-workspace': Columns,
+  'animation-motion': Workflow,
+  'security-authentication': Lock,
+  'editors-creative': FileCode,
+  'time-scheduling': Clock,
+  'advanced-utilities': ShieldCheck,
 };
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({
   activeCategory,
   onSelectCategory,
+  activeTier,
+  onSelectTier,
   sidebarQuery,
   onSidebarQueryChange,
   filteredCount,
+  totalCount,
+  favoritesCount,
   mobileSidebarOpen,
   onCloseMobileSidebar,
   currentView,
   onNavigateToSection,
-  onJumpToElementId,
+  onOpenEncyclopedia,
 }) => {
+  const { palette } = useJXTheme();
+
   const content = (
-    <div className="flex flex-col h-full justify-between overflow-hidden">
+    <div className="flex flex-col h-full justify-between overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl">
       <div className="flex flex-col flex-1 min-h-0">
         {/* Brand Header */}
-        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md">
+        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-2.5">
             <img
               src="./favicon.png"
@@ -117,7 +105,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                   v2.4.0
                 </span>
               </div>
-              <span className="font-mono text-[11px] text-slate-400">@jxui/react</span>
+              <span className="font-mono text-[11px] text-slate-400">@jxui/react · 351 Primitives</span>
             </div>
           </div>
           <button
@@ -130,17 +118,17 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           </button>
         </div>
 
-        {/* Search Input Filter */}
-        <div className="px-4 py-3 border-b border-slate-200/50 dark:border-slate-800/50">
+        {/* Dynamic Search Input */}
+        <div className="px-3.5 py-2.5 border-b border-slate-200/50 dark:border-slate-800/50 shrink-0">
           <div className="relative flex items-center">
-            <Search className="w-4 h-4 absolute left-2.5 text-slate-400 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-400 pointer-events-none" />
             <input
               type="text"
               value={sidebarQuery}
               onChange={(e) => onSidebarQueryChange(e.target.value)}
-              placeholder="Filter components..."
-              aria-label="Filter components list"
-              className="w-full pl-8 pr-10 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/70 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 border border-transparent focus:border-indigo-500/40 transition-colors"
+              placeholder="Search all 351 components..."
+              aria-label="Search all 351 components"
+              className="w-full pl-8 pr-12 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/70 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 border border-transparent focus:border-indigo-500/40 transition-colors"
             />
             <span className="absolute right-2 px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-slate-700 text-[10px] font-mono font-medium text-slate-600 dark:text-slate-300">
               {filteredCount}
@@ -148,105 +136,218 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           </div>
         </div>
 
-        {/* Category Batches Nav List */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 text-xs">
-          {/* All Components reset pill */}
+        {/* Global Component Tier Quick Filters */}
+        <div className="p-3 border-b border-slate-200/50 dark:border-slate-800/50 space-y-1.5 shrink-0 text-xs">
+          {/* All 351 Components */}
           <button
             type="button"
             onClick={() => {
               onSelectCategory('all');
+              onSelectTier('all');
               onCloseMobileSidebar();
             }}
             className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
-              activeCategory === 'all'
+              activeCategory === 'all' && activeTier === 'all'
                 ? 'bg-indigo-600 text-white font-semibold shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
             }`}
           >
             <span className="flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>All 61 Components</span>
+              <span>All 351 Components</span>
             </span>
-            <span className="font-mono text-[10px]">61</span>
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 font-bold">
+              {totalCount}
+            </span>
           </button>
 
-          {/* 290-Component Suite Quick Jump */}
-          <button
-            type="button"
-            onClick={() => onNavigateToSection('jx-290-component-suite')}
-            className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-100/80 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
-          >
-            <span className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-              <span>290 Suite (18 Cats)</span>
-            </span>
-            <span className="font-mono text-[10px] px-1.5 py-0.2 bg-indigo-200/80 dark:bg-indigo-800 rounded-full font-bold">290</span>
-          </button>
+          {/* Tier Pills Grid */}
+          <div className="grid grid-cols-3 gap-1 pt-0.5">
+            <button
+              type="button"
+              onClick={() => {
+                onSelectTier('showcase');
+                onCloseMobileSidebar();
+              }}
+              className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors text-center cursor-pointer ${
+                activeTier === 'showcase'
+                  ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              Showcases (61)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onSelectTier('primitive');
+                onCloseMobileSidebar();
+              }}
+              className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors text-center cursor-pointer ${
+                activeTier === 'primitive'
+                  ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              Primitives (290)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onSelectTier('favorites');
+                onCloseMobileSidebar();
+              }}
+              className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors text-center cursor-pointer flex items-center justify-center gap-1 ${
+                activeTier === 'favorites'
+                  ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-500" />
+              <span>Starred ({favoritesCount})</span>
+            </button>
+          </div>
+        </div>
 
-          {/* Official GitHub Page & Showcase Jump */}
-          <button
-            type="button"
-            onClick={() => onNavigateToSection('github-page')}
-            className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
-              currentView === 'github-page'
-                ? 'bg-[#238636] text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <Github className="w-3.5 h-3.5" />
-              <span>GitHub Page &amp; Docs</span>
-            </span>
-            <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-black/20 text-emerald-600 dark:text-emerald-400 font-bold">v2.4</span>
-          </button>
+        {/* 18 Unified Categories Single Scroll List */}
+        <div className="flex-1 overflow-y-auto px-2.5 py-2 space-y-1 text-xs">
+          <div className="px-2.5 pt-1 pb-1.5 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <span>18 Unified Categories</span>
+            <span className="font-mono">Combined</span>
+          </div>
 
-          {/* 8 Batches */}
-          {CATEGORIES.map((cat) => {
-            const Icon = CATEGORY_ICONS[cat.id] || Box;
-            const subItems = CATEGORY_SUB_ITEMS[cat.id] || [];
+          {UNIFIED_CATEGORIES_18.map((cat: UnifiedCategorySpec) => {
+            const Icon = CATEGORY_ICONS_18[cat.id] || Box;
             const isCatActive = activeCategory === cat.id;
 
             return (
-              <div key={cat.id} className="space-y-1">
-                <div
-                  onClick={() => {
-                    onSelectCategory(cat.id);
-                  }}
-                  className={`px-2 py-1 flex items-center justify-between rounded-lg cursor-pointer transition-colors ${
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => {
+                  onSelectCategory(cat.id);
+                  onCloseMobileSidebar();
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-left transition-all cursor-pointer ${
+                  isCatActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold ring-1 ring-indigo-500/30'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
                     isCatActive
-                      ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <span className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  }`}>
                     <Icon className="w-3.5 h-3.5" />
-                    <span>{cat.shortTitle}</span>
-                  </span>
-                  <span className="font-mono text-[10px] opacity-75">{cat.count}</span>
+                  </div>
+                  <div className="flex flex-col min-w-0 truncate">
+                    <span className="text-xs truncate font-medium">
+                      {cat.title.replace(/^Category \d+:\s*/, '')}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {cat.showcaseCount} showcases · {cat.primitiveCount} primitives
+                    </span>
+                  </div>
                 </div>
 
-                <div className="space-y-0.5 pl-3 border-l border-slate-200/70 dark:border-slate-800 ml-2">
-                  {subItems.map((sub) => (
-                    <button
-                      key={sub.id}
-                      type="button"
-                      onClick={() => onJumpToElementId(sub.id, cat.id)}
-                      className="w-full flex items-center justify-between px-2 py-1 rounded-md text-[11px] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white transition-colors text-left truncate cursor-pointer"
-                    >
-                      <span className="truncate">{sub.label}</span>
-                      <ArrowUpRight className="w-2.5 h-2.5 opacity-40 shrink-0" />
-                    </button>
-                  ))}
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  {cat.showcaseCount > 0 && (
+                    <span className="text-[10px] text-amber-500 font-bold" title={`${cat.showcaseCount} Flagship Showcases`}>
+                      ★
+                    </span>
+                  )}
+                  <span className={`font-mono text-[11px] px-1.5 py-0.5 rounded-full ${
+                    isCatActive
+                      ? 'bg-indigo-200/70 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-bold'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  }`}>
+                    {cat.totalCount}
+                  </span>
                 </div>
-              </div>
+              </button>
             );
           })}
+
+          {/* Studio Tools & Fast Links Section */}
+          <div className="pt-3 pb-1">
+            <div className="px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Studio &amp; Governance
+            </div>
+
+            <div className="space-y-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenEncyclopedia();
+                  onCloseMobileSidebar();
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>61 MUI Flaws vs JXUI</span>
+                </span>
+                <span className="font-mono text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">Delta</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onNavigateToSection('jx-design-token-exporter');
+                  onCloseMobileSidebar();
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Palette className="w-3.5 h-3.5 text-violet-500" />
+                  <span>Design Token Studio</span>
+                </span>
+                <span className="font-mono text-[10px] text-slate-400">JSON/CSS</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onNavigateToSection('jx-accessibility-aria-standards');
+                  onCloseMobileSidebar();
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>WCAG 2.1 AA Checklist</span>
+                </span>
+                <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">100%</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onNavigateToSection('github-page');
+                  onCloseMobileSidebar();
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-left ${
+                  currentView === 'github-page'
+                    ? 'bg-[#238636] text-white font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Github className="w-3.5 h-3.5" />
+                  <span>GitHub Showcase &amp; Docs</span>
+                </span>
+                <span className="font-mono text-[10px] text-emerald-500 font-bold">v2.4</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Bottom Compliance & Framework Footer */}
-      <div className="p-4 border-t border-slate-200/70 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-2">
-        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+      <div className="p-3.5 border-t border-slate-200/70 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 space-y-2 shrink-0">
+        <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
           <span className="flex items-center gap-1.5 font-medium">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
             <span>WCAG 2.1 AA Certified</span>
@@ -256,8 +357,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
           <div className="bg-emerald-500 h-full w-full rounded-full" />
         </div>
-        <p className="text-[10px] text-slate-400 font-mono">
-          Strict zero-runtime CSS · React 19 Actions
+        <p className="text-[10px] text-slate-400 font-mono flex items-center justify-between">
+          <span>React 19 Actions</span>
+          <span>Zero Runtime CSS</span>
         </p>
       </div>
     </div>

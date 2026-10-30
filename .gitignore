@@ -9,3 +9,4 @@ coverage/
 !.env.example
 .agents
 dist.zip
+*.tgz

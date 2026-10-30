@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { Sparkles } from 'lucide-react';
 import {
   JXThemeProvider,
@@ -6,11 +6,14 @@ import {
 } from './context/JXThemeContext';
 import {
   COMPONENT_CATALOG,
-  CategoryId,
   ComponentSpec,
 } from './data/catalog';
 import { ComponentSpec290 } from './data/catalog290';
-import { UNIFIED_CATEGORIES_18 } from './data/unifiedCatalog';
+import { UNIFIED_CATEGORIES_18, UNIFIED_COMPONENTS_351 } from './data/unifiedCatalog';
+import {
+  JXCollectionsState,
+  loadCollectionsState,
+} from './utils/jxuiCollections';
 import { AppSidebar } from './components/layout/AppSidebar';
 import { AppHeader } from './components/layout/AppHeader';
 import { AppWorkbench } from './components/layout/AppWorkbench';
@@ -42,15 +45,28 @@ const SectionSkeletonFallback: React.FC<{ label?: string }> = ({
 const WorkbenchShell: React.FC = () => {
   const { pushToast } = useJXTheme();
 
-  const [activeCategory, setActiveCategory] = useState<CategoryId | 'all'>('all');
-  const [sidebarQuery, setSidebarQuery] = useState('');
-  const [cmdOpen, setCmdOpen] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [showEncyclopedia, setShowEncyclopedia] = useState(false);
-  const [encyclopediaFilter, setEncyclopediaFilter] = useState('');
-  const [copiedInstall, setCopiedInstall] = useState(false);
-  const [springPressActive, setSpringPressActive] = useState(true);
-  const [haloFocusActive, setHaloFocusActive] = useState(true);
+  // Unified Catalog Navigation States
+  const [activeCategory, setActiveCategory] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const cat = new URLSearchParams(window.location.search).get('cat');
+      if (cat) return cat;
+    }
+    return 'all';
+  });
+
+  const [activeTier, setActiveTier] = useState<'all' | 'showcase' | 'primitive' | 'favorites'>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [cmdOpen, setCmdOpen] = useState<boolean>(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
+  const [showEncyclopedia, setShowEncyclopedia] = useState<boolean>(false);
+  const [encyclopediaFilter, setEncyclopediaFilter] = useState<string>('');
+  const [copiedInstall, setCopiedInstall] = useState<boolean>(false);
+  const [springPressActive, setSpringPressActive] = useState<boolean>(true);
+  const [haloFocusActive, setHaloFocusActive] = useState<boolean>(true);
+
+  // Collections & Bookmarks State
+  const [collectionsState, setCollectionsState] = useState<JXCollectionsState>(() => loadCollectionsState());
+
   const [currentView, setCurrentView] = useState<'workbench' | 'github-page'>(() => {
     if (typeof window !== 'undefined') {
       const v = new URLSearchParams(window.location.search).get('view');
@@ -58,10 +74,8 @@ const WorkbenchShell: React.FC = () => {
     }
     return 'workbench';
   });
-  const [selectedExplorerCompId, setSelectedExplorerCompId] = useState<string | undefined>();
-  const [selectedExplorerCatId, setSelectedExplorerCatId] = useState<string | undefined>();
 
-  // URL sync for currentView
+  // URL sync for currentView and activeCategory
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -71,23 +85,28 @@ const WorkbenchShell: React.FC = () => {
       } else {
         url.searchParams.delete('view');
       }
+
+      if (activeCategory && activeCategory !== 'all') {
+        url.searchParams.set('cat', activeCategory);
+      } else {
+        url.searchParams.delete('cat');
+      }
+
       window.history.replaceState(null, '', url.toString());
     } catch {
       // ignore
     }
-  }, [currentView]);
+  }, [currentView, activeCategory]);
 
   const handleSelect290Component = (item: ComponentSpec290) => {
-    setActiveCategory('all');
-    setSelectedExplorerCompId(item.id);
     const cat = UNIFIED_CATEGORIES_18.find((c) => c.number === item.categoryNumber);
     if (cat) {
-      setSelectedExplorerCatId(cat.id);
+      setActiveCategory(cat.id);
     }
     setMobileSidebarOpen(false);
     setCmdOpen(false);
     setTimeout(() => {
-      const el = document.getElementById(`spec-${item.id}`) || document.getElementById('jx-290-component-suite');
+      const el = document.getElementById(`spec-${item.id}`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 120);
   };
@@ -126,25 +145,11 @@ const WorkbenchShell: React.FC = () => {
   };
 
   const handleJumpToComponent = (spec: ComponentSpec) => {
-    if (activeCategory !== 'all' && activeCategory !== spec.category) {
-      setActiveCategory('all');
-    }
     setMobileSidebarOpen(false);
     setTimeout(() => {
-      const el = document.getElementById(spec.id);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 60);
-  };
-
-  const handleJumpToElementId = (id: string, catId?: CategoryId) => {
-    if (catId && activeCategory !== 'all' && activeCategory !== catId) {
-      setActiveCategory('all');
-    }
-    setMobileSidebarOpen(false);
-    setTimeout(() => {
-      const el = document.getElementById(id);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 60);
+      const el = document.getElementById(`spec-${spec.id}`) || document.getElementById(spec.id);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
   };
 
   const handleNavigateToSection = (sectionId: string) => {
@@ -156,7 +161,6 @@ const WorkbenchShell: React.FC = () => {
       return;
     }
     setCurrentView('workbench');
-    setActiveCategory('all');
     setMobileSidebarOpen(false);
     setCmdOpen(false);
     setTimeout(() => {
@@ -170,7 +174,6 @@ const WorkbenchShell: React.FC = () => {
   };
 
   const handleToggleEncyclopedia = () => {
-    setActiveCategory('all');
     setShowEncyclopedia(true);
     setMobileSidebarOpen(false);
     setCmdOpen(false);
@@ -180,45 +183,57 @@ const WorkbenchShell: React.FC = () => {
     }, 80);
   };
 
-  const filteredCatalog = COMPONENT_CATALOG.filter((item) => {
-    const matchesCat = activeCategory === 'all' || item.category === activeCategory;
-    const matchesQuery =
-      !sidebarQuery.trim() ||
-      item.name.toLowerCase().includes(sidebarQuery.toLowerCase()) ||
-      item.subtitle.toLowerCase().includes(sidebarQuery.toLowerCase());
-    return matchesCat && matchesQuery;
-  });
+  // Filtered count across all 351 components
+  const filteredCount = useMemo(() => {
+    let list = UNIFIED_COMPONENTS_351;
+    if (activeTier === 'showcase') {
+      list = list.filter((c) => c.tier === 'showcase');
+    } else if (activeTier === 'primitive') {
+      list = list.filter((c) => c.tier === 'primitive');
+    } else if (activeTier === 'favorites') {
+      list = list.filter((c) => collectionsState.favorites.includes(c.id));
+    }
 
-  const encyclopediaItems = COMPONENT_CATALOG.filter((item) => {
-    if (!encyclopediaFilter.trim()) return true;
-    const q = encyclopediaFilter.toLowerCase();
-    return (
-      item.name.toLowerCase().includes(q) ||
-      item.subtitle.toLowerCase().includes(q) ||
-      item.muiFlaw.toLowerCase().includes(q) ||
-      item.jxuiUpgrade.toLowerCase().includes(q)
-    );
-  });
+    if (activeCategory !== 'all') {
+      list = list.filter((c) => c.categoryId === activeCategory);
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.subtitle.toLowerCase().includes(q) ||
+          c.categoryTitle.toLowerCase().includes(q) ||
+          c.tags.some((t) => t.toLowerCase().includes(q))
+      );
+    }
+    return list.length;
+  }, [activeCategory, activeTier, searchQuery, collectionsState]);
 
   return (
     <div className="min-h-screen flex bg-[#F8FAFC] dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 antialiased selection:bg-indigo-500/20 selection:text-indigo-600 dark:selection:text-indigo-300">
-      {/* 1. Modular Decomposed Sidebar */}
+      {/* 1. Unified Single Component Navigation Sidebar */}
       <AppSidebar
         activeCategory={activeCategory}
         onSelectCategory={setActiveCategory}
-        sidebarQuery={sidebarQuery}
-        onSidebarQueryChange={setSidebarQuery}
-        filteredCount={filteredCatalog.length}
+        activeTier={activeTier}
+        onSelectTier={setActiveTier}
+        sidebarQuery={searchQuery}
+        onSidebarQueryChange={setSearchQuery}
+        filteredCount={filteredCount}
+        totalCount={UNIFIED_COMPONENTS_351.length}
+        favoritesCount={collectionsState.favorites.length}
         mobileSidebarOpen={mobileSidebarOpen}
         onCloseMobileSidebar={() => setMobileSidebarOpen(false)}
         currentView={currentView}
         onNavigateToSection={handleNavigateToSection}
-        onJumpToElementId={handleJumpToElementId}
+        onOpenEncyclopedia={handleToggleEncyclopedia}
       />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* 2. Modular Decomposed Header */}
+        {/* 2. Top Navigation Header */}
         <AppHeader
           onOpenCmd={() => setCmdOpen(true)}
           onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
@@ -226,7 +241,7 @@ const WorkbenchShell: React.FC = () => {
           onToggleView={() => setCurrentView(currentView === 'workbench' ? 'github-page' : 'workbench')}
         />
 
-        {/* 3. Main Body: Switch between GitHub Showcase Page and Interactive Workbench */}
+        {/* 3. Main Content: GitHub Showcase Page OR Unified 351 Component Suite */}
         {currentView === 'github-page' ? (
           <Suspense fallback={<SectionSkeletonFallback label="Loading GitHub Showcase & Docs..." />}>
             <GitHubPage
@@ -236,9 +251,9 @@ const WorkbenchShell: React.FC = () => {
               }}
               onNavigateToCategory={(catId) => {
                 setCurrentView('workbench');
-                setSelectedExplorerCatId(catId);
+                setActiveCategory(catId);
                 setTimeout(() => {
-                  const el = document.getElementById('jx-290-component-suite');
+                  const el = document.getElementById('unified-component-suite');
                   el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 80);
               }}
@@ -248,9 +263,10 @@ const WorkbenchShell: React.FC = () => {
           <AppWorkbench
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory}
-            selectedExplorerCatId={selectedExplorerCatId}
-            selectedExplorerCompId={selectedExplorerCompId}
-            onJumpToComponent={handleJumpToComponent}
+            activeTier={activeTier}
+            setActiveTier={setActiveTier}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
             onCopyInstall={handleCopyInstall}
             copiedInstall={copiedInstall}
             onTriggerToast={handleTriggerToast}
@@ -258,11 +274,13 @@ const WorkbenchShell: React.FC = () => {
             onToggleEncyclopedia={handleToggleEncyclopedia}
             encyclopediaFilter={encyclopediaFilter}
             onEncyclopediaFilterChange={setEncyclopediaFilter}
-            encyclopediaItems={encyclopediaItems}
             springPressActive={springPressActive}
             onToggleSpringPress={() => setSpringPressActive((v) => !v)}
             haloFocusActive={haloFocusActive}
             onToggleHaloFocus={() => setHaloFocusActive((v) => !v)}
+            collectionsState={collectionsState}
+            onUpdateCollectionsState={setCollectionsState}
+            onJumpToComponent={handleJumpToComponent}
           />
         )}
       </div>
@@ -274,7 +292,7 @@ const WorkbenchShell: React.FC = () => {
           onClose={() => setCmdOpen(false)}
           onSelectComponent={handleJumpToComponent}
           onSelect290Component={handleSelect290Component}
-          onSelectCategory={setActiveCategory}
+          onSelectCategory={(catId) => setActiveCategory(catId)}
           onNavigateToSection={handleNavigateToSection}
           onToggleEncyclopedia={handleToggleEncyclopedia}
         />

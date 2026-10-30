@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import {
   Sparkles,
   Zap,
@@ -8,6 +8,30 @@ import {
   RotateCcw,
   Sliders,
   ArrowUpRight,
+  Search,
+  Filter,
+  Star,
+  BookOpen,
+  Plus,
+  Trash2,
+  Download,
+  Upload,
+  X,
+  Layers,
+  Compass,
+  Box,
+  Bell,
+  LayoutGrid,
+  BarChart3,
+  Table,
+  Volume2,
+  Columns,
+  Workflow,
+  Lock,
+  FileCode,
+  Clock,
+  ShieldCheck,
+  ExternalLink,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -18,37 +42,34 @@ import {
 } from '../../context/JXThemeContext';
 import {
   COMPONENT_CATALOG,
-  CategoryId,
   ComponentSpec,
 } from '../../data/catalog';
+import {
+  UNIFIED_COMPONENTS_351,
+  UNIFIED_CATEGORIES_18,
+  UnifiedComponentSpec,
+  UnifiedCategorySpec,
+  DifficultyLevel,
+  FrameworkSupport,
+} from '../../data/unifiedCatalog';
+import {
+  JXCollectionsState,
+  toggleFavorite,
+  isFavorite,
+  createCollection,
+  deleteCollection,
+  exportCollectionsJSON,
+  importCollectionsJSON,
+} from '../../utils/jxuiCollections';
+import { InteractiveComponentPreview } from '../InteractiveComponentPreview';
+import { ComponentDocumentationModal } from '../ComponentDocumentationModal';
 
-// Lazy-loaded showcase & tool modules
+// Lazy-loaded studio modules
 const DesignTokenExporter = lazy(() =>
   import('../DesignTokenExporter').then((m) => ({ default: m.DesignTokenExporter }))
 );
 const AccessibilityAriaSection = lazy(() =>
   import('../AccessibilityAriaSection').then((m) => ({ default: m.AccessibilityAriaSection }))
-);
-const Category1Inputs = lazy(() =>
-  import('../Category1Inputs').then((m) => ({ default: m.Category1Inputs }))
-);
-const Category2DataDisplay = lazy(() =>
-  import('../Category2DataDisplay').then((m) => ({ default: m.Category2DataDisplay }))
-);
-const Category3And4FeedbackSurfaces = lazy(() =>
-  import('../Category3And4FeedbackSurfaces').then((m) => ({ default: m.Category3And4FeedbackSurfaces }))
-);
-const Category5And6NavLayout = lazy(() =>
-  import('../Category5And6NavLayout').then((m) => ({ default: m.Category5And6NavLayout }))
-);
-const Category7EnterpriseX = lazy(() =>
-  import('../Category7EnterpriseX').then((m) => ({ default: m.Category7EnterpriseX }))
-);
-const Category8SignatureBlocks = lazy(() =>
-  import('../Category8SignatureBlocks').then((m) => ({ default: m.Category8SignatureBlocks }))
-);
-const JX290LibraryExplorer = lazy(() =>
-  import('../JX290LibraryExplorer').then((m) => ({ default: m.JX290LibraryExplorer }))
 );
 
 const SectionSkeletonFallback: React.FC<{ label?: string }> = ({
@@ -75,12 +96,36 @@ const RADIUS_OPTIONS: { id: RadiusScale; label: string; scaleLabel: string }[] =
   { id: 'xl', label: 'Ultra (24px)', scaleLabel: '1.75x' },
 ];
 
+const CATEGORY_ICONS_18: Record<string, React.ComponentType<{ className?: string }>> = {
+  'buttons-actions': Zap,
+  'glass-surfaces': Layers,
+  navigation: Compass,
+  'inputs-forms': Sliders,
+  'toggles-selection': CheckCircle2,
+  'modals-overlays': Box,
+  'feedback-notifications': Bell,
+  'loading-progress': Sparkles,
+  'cards-content': LayoutGrid,
+  'data-visualization': BarChart3,
+  'tables-datagrids': Table,
+  'media-audio-visual': Volume2,
+  'layout-workspace': Columns,
+  'animation-motion': Workflow,
+  'security-authentication': Lock,
+  'editors-creative': FileCode,
+  'time-scheduling': Clock,
+  'advanced-utilities': ShieldCheck,
+};
+
+const ITEMS_PER_PAGE = 24;
+
 export interface AppWorkbenchProps {
-  activeCategory: CategoryId | 'all';
-  setActiveCategory: (cat: CategoryId | 'all') => void;
-  selectedExplorerCatId?: string;
-  selectedExplorerCompId?: string;
-  onJumpToComponent: (spec: ComponentSpec) => void;
+  activeCategory: string;
+  setActiveCategory: (catId: string) => void;
+  activeTier: 'all' | 'showcase' | 'primitive' | 'favorites';
+  setActiveTier: (tier: 'all' | 'showcase' | 'primitive' | 'favorites') => void;
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
   onCopyInstall: () => void;
   copiedInstall: boolean;
   onTriggerToast: () => void;
@@ -88,19 +133,22 @@ export interface AppWorkbenchProps {
   onToggleEncyclopedia: () => void;
   encyclopediaFilter: string;
   onEncyclopediaFilterChange: (q: string) => void;
-  encyclopediaItems: ComponentSpec[];
   springPressActive: boolean;
   onToggleSpringPress: () => void;
   haloFocusActive: boolean;
   onToggleHaloFocus: () => void;
+  collectionsState: JXCollectionsState;
+  onUpdateCollectionsState: (next: JXCollectionsState) => void;
+  onJumpToComponent?: (spec: ComponentSpec) => void;
 }
 
 export const AppWorkbench: React.FC<AppWorkbenchProps> = ({
   activeCategory,
   setActiveCategory,
-  selectedExplorerCatId,
-  selectedExplorerCompId,
-  onJumpToComponent,
+  activeTier,
+  setActiveTier,
+  searchQuery,
+  setSearchQuery,
   onCopyInstall,
   copiedInstall,
   onTriggerToast,
@@ -108,46 +156,273 @@ export const AppWorkbench: React.FC<AppWorkbenchProps> = ({
   onToggleEncyclopedia,
   encyclopediaFilter,
   onEncyclopediaFilterChange,
-  encyclopediaItems,
   springPressActive,
   onToggleSpringPress,
   haloFocusActive,
   onToggleHaloFocus,
+  collectionsState,
+  onUpdateCollectionsState,
+  onJumpToComponent,
 }) => {
   const {
+    palette,
     accent,
     setAccent,
     radiusScale,
     setRadiusScale,
+    getRadiusClass,
     compareMode,
     setCompareMode,
+    pushToast,
   } = useJXTheme();
 
+  // Filter States
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
+  const [selectedFramework, setSelectedFramework] = useState<string>('all');
+  const [selectedCollection, setSelectedCollection] = useState<string>('all');
+
+  // UI Modals & Pagination
+  const [activeDocSpec, setActiveDocSpec] = useState<UnifiedComponentSpec | null>(null);
+  const [showManageCollections, setShowManageCollections] = useState<boolean>(false);
+  const [newCollectionName, setNewCollectionName] = useState<string>('');
+  const [newCollectionDesc, setNewCollectionDesc] = useState<string>('');
+  const [visibleCount, setVisibleCount] = useState<number>(ITEMS_PER_PAGE);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // URL Deep link check on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlDoc = params.get('doc');
+      if (urlDoc) {
+        const found = UNIFIED_COMPONENTS_351.find((c) => c.id === urlDoc);
+        if (found) {
+          setActiveDocSpec(found);
+        }
+      }
+    } catch {
+      // fallback
+    }
+  }, []);
+
+  // URL Sync when activeDocSpec changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const url = new URL(window.location.href);
+      if (activeDocSpec) {
+        url.searchParams.set('doc', activeDocSpec.id);
+      } else {
+        url.searchParams.delete('doc');
+      }
+      window.history.replaceState(null, '', url.toString());
+    } catch {
+      // fallback
+    }
+  }, [activeDocSpec]);
+
+  // Reset pagination when any filter changes
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [
+    activeCategory,
+    activeTier,
+    searchQuery,
+    selectedDifficulty,
+    selectedFramework,
+    selectedCollection,
+  ]);
+
+  // Unified Filtering Engine across all 351 Components
+  const filteredComponents = useMemo(() => {
+    let list = UNIFIED_COMPONENTS_351;
+
+    // 1. Tier filter
+    if (activeTier === 'showcase') {
+      list = list.filter((c) => c.tier === 'showcase');
+    } else if (activeTier === 'primitive') {
+      list = list.filter((c) => c.tier === 'primitive');
+    } else if (activeTier === 'favorites') {
+      list = list.filter((c) => collectionsState.favorites.includes(c.id));
+    }
+
+    // 2. Category filter
+    if (activeCategory !== 'all') {
+      list = list.filter((c) => c.categoryId === activeCategory);
+    }
+
+    // 3. Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.subtitle.toLowerCase().includes(q) ||
+          c.categoryTitle.toLowerCase().includes(q) ||
+          c.tags.some((t) => t.toLowerCase().includes(q)) ||
+          c.muiFlaw.toLowerCase().includes(q) ||
+          c.jxuiUpgrade.toLowerCase().includes(q)
+      );
+    }
+
+    // 4. Difficulty filter
+    if (selectedDifficulty !== 'all') {
+      list = list.filter((c) => c.difficulty === selectedDifficulty);
+    }
+
+    // 5. Framework filter
+    if (selectedFramework !== 'all') {
+      list = list.filter((c) => c.frameworks.includes(selectedFramework as FrameworkSupport));
+    }
+
+    // 6. Custom collection filter
+    if (selectedCollection !== 'all') {
+      const col = collectionsState.collections.find((c) => c.id === selectedCollection);
+      if (col) {
+        list = list.filter((c) => col.componentIds.includes(c.id));
+      }
+    }
+
+    return list;
+  }, [
+    activeCategory,
+    activeTier,
+    searchQuery,
+    selectedDifficulty,
+    selectedFramework,
+    selectedCollection,
+    collectionsState,
+  ]);
+
+  const visibleComponents = useMemo(() => {
+    return filteredComponents.slice(0, visibleCount);
+  }, [filteredComponents, visibleCount]);
+
+  const handleCopyCode = (spec: UnifiedComponentSpec) => {
+    navigator.clipboard.writeText(spec.jsxSnippet);
+    setCopiedId(spec.id);
+    pushToast({
+      title: `Copied <${spec.name} /> Code`,
+      description: 'Import and working JSX copied to clipboard',
+      variant: 'success',
+    });
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleToggleFav = (specId: string, specName: string) => {
+    const next = toggleFavorite(specId, collectionsState);
+    onUpdateCollectionsState(next);
+    const isNowFav = isFavorite(specId, next);
+    pushToast({
+      title: isNowFav ? 'Saved to Bookmarks' : 'Removed from Bookmarks',
+      description: `<${specName} /> ${isNowFav ? 'added to' : 'removed from'} your starred list`,
+      variant: isNowFav ? 'success' : 'default',
+    });
+  };
+
+  const handleCreateCollection = () => {
+    if (!newCollectionName.trim()) return;
+    const next = createCollection(newCollectionName.trim(), newCollectionDesc.trim(), collectionsState);
+    onUpdateCollectionsState(next);
+    setNewCollectionName('');
+    setNewCollectionDesc('');
+    pushToast({
+      title: 'Collection Created',
+      description: `Created "${newCollectionName.trim()}"`,
+      variant: 'success',
+    });
+  };
+
+  const handleDeleteCollection = (id: string, name: string) => {
+    const next = deleteCollection(id, collectionsState);
+    onUpdateCollectionsState(next);
+    if (selectedCollection === id) setSelectedCollection('all');
+    pushToast({
+      title: 'Collection Deleted',
+      description: `Removed "${name}"`,
+      variant: 'default',
+    });
+  };
+
+  const handleExportCollections = () => {
+    const jsonStr = exportCollectionsJSON(collectionsState);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `jxui-collections-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    pushToast({
+      title: 'Collections Exported',
+      description: 'Saved your bookmarks and collections to JSON',
+      variant: 'success',
+    });
+  };
+
+  const handleImportCollections = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const next = importCollectionsJSON(text, collectionsState);
+        onUpdateCollectionsState(next);
+        pushToast({
+          title: 'Collections Imported',
+          description: `Loaded ${next.collections.length} collections and ${next.favorites.length} bookmarks`,
+          variant: 'success',
+        });
+      } catch {
+        pushToast({
+          title: 'Import Failed',
+          description: 'Invalid JSON collections schema',
+          variant: 'error',
+        });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // 61 Architectural encyclopedia filter
+  const encyclopediaItems = COMPONENT_CATALOG.filter((item) => {
+    if (!encyclopediaFilter.trim()) return true;
+    const q = encyclopediaFilter.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(q) ||
+      item.subtitle.toLowerCase().includes(q) ||
+      item.muiFlaw.toLowerCase().includes(q) ||
+      item.jxuiUpgrade.toLowerCase().includes(q)
+    );
+  });
+
+  const activeCategorySpec = UNIFIED_CATEGORIES_18.find((c) => c.id === activeCategory);
+
   return (
-    <main className="w-full flex-1 px-4 sm:px-8 py-6 sm:py-8 space-y-8 sm:space-y-12 max-w-7xl mx-auto">
+    <main className="w-full flex-1 px-4 sm:px-8 py-6 sm:py-8 space-y-8 max-w-7xl mx-auto">
       {/* Top Specular Ambient Glow Layer */}
       <div className="relative w-full overflow-hidden pt-2">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[760px] h-[340px] bg-gradient-to-b from-indigo-500/10 via-violet-500/5 to-transparent blur-3xl pointer-events-none rounded-full" />
 
         {/* 1. HERO HEADER WITH LIVE ARCHITECTURAL COMPARISON STATS */}
         <div className="relative z-10 flex flex-col gap-6">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2 border-b border-slate-200/80 dark:border-slate-800/80">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
             <div className="space-y-3 max-w-3xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
-                <span>Next-Gen Enterprise React Component System</span>
+                <span>The Unified React 19 Component Suite</span>
                 <span className="w-1 h-1 rounded-full bg-indigo-400" />
-                <span className="font-mono text-[11px] opacity-90">MUI Core · Lab · X Parity</span>
+                <span className="font-mono text-[11px] opacity-90">351 Total Primitives</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-                Reimagining Every Material UI Component.
+                All 351 React Components. Unified &amp; Interactive.
               </h1>
 
               <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 font-normal leading-relaxed">
-                61 flagship showcases + 290 atomic primitives with zero runtime CSS overhead, native
-                physics spring damped transitions (200ms), 3px roving tactile focus rings, and full React
-                19 concurrent actions.
+                61 flagship showcases + 290 atomic primitives categorized into 18 unified domains. Zero runtime CSS overhead, 200ms damped spring physics, and 100% WCAG AA certification.
               </p>
             </div>
 
@@ -234,7 +509,7 @@ export const AppWorkbench: React.FC<AppWorkbenchProps> = ({
               </div>
               <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Native React 19 Actions &amp; TS 7.0 Parity</span>
+                <span>Native React 19 Actions &amp; Strict Polymorphism</span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Zero type mismatch with 'as', strict polymorphic component slots.
@@ -385,7 +660,357 @@ export const AppWorkbench: React.FC<AppWorkbenchProps> = ({
         </div>
       </div>
 
-      {/* Expandable Full 61-Component Encyclopedia */}
+      {/* 3. UNIFIED 18-CATEGORY HORIZONTAL PILL SELECTOR RAIL */}
+      <div className="relative">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scroll-smooth">
+          {/* All Categories Button */}
+          <button
+            type="button"
+            onClick={() => setActiveCategory('all')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
+              activeCategory === 'all'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>All Categories</span>
+            <span className="font-mono text-[10px] px-1.5 py-0.2 rounded-full bg-black/15 dark:bg-white/15">
+              351
+            </span>
+          </button>
+
+          {/* 18 Individual Category Pills */}
+          {UNIFIED_CATEGORIES_18.map((cat) => {
+            const Icon = CATEGORY_ICONS_18[cat.id] || Box;
+            const isActive = activeCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
+                  isActive
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 opacity-80" />
+                <span>{cat.title.replace(/^Category \d+:\s*/, '')}</span>
+                <span className={`font-mono text-[10px] px-1.5 py-0.2 rounded-full ${
+                  isActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                }`}>
+                  {cat.totalCount}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. MASTER COMPONENT EXPLORER: FILTERS & CONTROLS BAR */}
+      <div id="unified-component-suite" className="scroll-mt-24 space-y-4">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+          {/* Left: Search input */}
+          <div className="relative w-full md:w-80 flex items-center">
+            <Search className="w-4 h-4 absolute left-3 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search components, tags, props..."
+              className="w-full pl-9 pr-8 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs font-bold"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Center: Tier Tabs */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-semibold w-full md:w-auto overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setActiveTier('all')}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                activeTier === 'all'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              All (351)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTier('showcase')}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                activeTier === 'showcase'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
+              <span>Showcases (61)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTier('primitive')}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                activeTier === 'primitive'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Primitives (290)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTier('favorites')}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                activeTier === 'favorites'
+                  ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Star className="w-3 h-3 text-amber-500 fill-amber-400" />
+              <span>Starred ({collectionsState.favorites.length})</span>
+            </button>
+          </div>
+
+          {/* Right: Dropdowns & Collections Manager */}
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end text-xs">
+            {/* Difficulty Dropdown */}
+            <select
+              value={selectedDifficulty}
+              onChange={(e) => setSelectedDifficulty(e.target.value)}
+              aria-label="Filter by difficulty"
+              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-200 text-xs focus:outline-none"
+            >
+              <option value="all">All Difficulties</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+
+            {/* Framework Dropdown */}
+            <select
+              value={selectedFramework}
+              onChange={(e) => setSelectedFramework(e.target.value)}
+              aria-label="Filter by framework"
+              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-200 text-xs focus:outline-none"
+            >
+              <option value="all">All Frameworks</option>
+              <option value="React 19">React 19</option>
+              <option value="Next.js 15">Next.js 15</option>
+              <option value="Vite">Vite</option>
+            </select>
+
+            {/* Collections Manager Button */}
+            <button
+              type="button"
+              onClick={() => setShowManageCollections(true)}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+            >
+              <Layers className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Collections ({collectionsState.collections.length})</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Category Header & Filter Indicator */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+              <span>{activeCategorySpec ? activeCategorySpec.title : 'All 351 Components'}</span>
+              <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold">
+                {filteredComponents.length} results
+              </span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {activeCategorySpec
+                ? activeCategorySpec.description
+                : 'Browse all 61 showcase architectures and 290 atomic primitives in one unified interface.'}
+            </p>
+          </div>
+
+          {(activeCategory !== 'all' || activeTier !== 'all' || searchQuery || selectedDifficulty !== 'all' || selectedFramework !== 'all' || selectedCollection !== 'all') && (
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCategory('all');
+                setActiveTier('all');
+                setSearchQuery('');
+                setSelectedDifficulty('all');
+                setSelectedFramework('all');
+                setSelectedCollection('all');
+              }}
+              className="self-start sm:self-auto inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-lg text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 font-medium transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset Filters</span>
+            </button>
+          )}
+        </div>
+
+        {/* 5. MASTER UNIFIED COMPONENT GRID */}
+        {visibleComponents.length === 0 ? (
+          <div className="w-full p-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-3">
+            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+              <Search className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              No matching components found
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+              Try adjusting your search query, tier filter, or category selection to find what you need.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCategory('all');
+                setActiveTier('all');
+                setSearchQuery('');
+                setSelectedDifficulty('all');
+                setSelectedFramework('all');
+              }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white cursor-pointer hover:bg-indigo-500 transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset All Filters</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {visibleComponents.map((spec) => {
+              const isFav = collectionsState.favorites.includes(spec.id);
+              const isCopied = copiedId === spec.id;
+
+              return (
+                <div
+                  key={spec.id}
+                  id={`spec-${spec.id}`}
+                  className={`group relative rounded-2xl border bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-4 border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400 dark:hover:border-indigo-600`}
+                >
+                  {/* Card Header */}
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-0.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                            <span>&lt;{spec.name} /&gt;</span>
+                          </h3>
+                        </div>
+                        <span className="text-[11px] font-mono text-slate-400">
+                          {spec.categoryTitle.replace(/^Category \d+:\s*/, '')}
+                        </span>
+                      </div>
+
+                      {/* Tier Badges */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                          spec.tier === 'showcase'
+                            ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                        }`}>
+                          {spec.tier === 'showcase' ? `★ Showcase #${spec.showcaseNumber}` : 'Primitive'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      {spec.subtitle}
+                    </p>
+                  </div>
+
+                  {/* Real Interactive Component Preview Stage */}
+                  <div className="min-h-[110px] rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-center p-3 relative overflow-hidden group-hover:border-indigo-200 dark:group-hover:border-indigo-900/60 transition-colors">
+                    <InteractiveComponentPreview
+                      spec={spec}
+                      onOpenDocs={setActiveDocSpec}
+                      onJumpToShowcase={onJumpToComponent ? () => {
+                        const s = COMPONENT_CATALOG.find((c) => c.number === spec.showcaseNumber);
+                        if (s) onJumpToComponent(s);
+                      } : undefined}
+                    />
+                  </div>
+
+                  {/* Card Footer Actions & Quality Tags */}
+                  <div className="space-y-2.5 pt-1 border-t border-slate-100 dark:border-slate-800/70">
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>{spec.quality.wcagScore}</span>
+                      </span>
+                      <span className="capitalize">{spec.difficulty}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      {/* Inspect Docs Button */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveDocSpec(spec)}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>Inspect Docs</span>
+                      </button>
+
+                      {/* Copy Code Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleCopyCode(spec)}
+                        title="Copy JSX Code"
+                        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                      >
+                        {isCopied ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+
+                      {/* Bookmark Star Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleFav(spec.id, spec.name)}
+                        title={isFav ? 'Remove from bookmarks' : 'Add to bookmarks'}
+                        className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                          isFav
+                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-500'
+                            : 'border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white'
+                        }`}
+                      >
+                        <Star className={`w-3.5 h-3.5 ${isFav ? 'fill-amber-400' : ''}`} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Load More Pagination Button */}
+        {filteredComponents.length > visibleCount && (
+          <div className="text-center pt-4 pb-2">
+            <button
+              type="button"
+              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+              className="px-6 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-indigo-400 dark:hover:border-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-xs transition-all cursor-pointer"
+            >
+              Load More Components ({filteredComponents.length - visibleCount} remaining)
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 6. EXPANDABLE 61-COMPONENT ARCHITECTURAL ENCYCLOPEDIA */}
       <AnimatePresence initial={false}>
         {showEncyclopedia && (
           <motion.section
@@ -402,7 +1027,7 @@ export const AppWorkbench: React.FC<AppWorkbenchProps> = ({
                   Complete 61-Component Architectural Encyclopedia (#01–#61)
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Every component’s legacy Material UI flaw, JXUI ergonomic upgrade, and live jump link.
+                  Every component’s legacy Material UI flaw, JXUI ergonomic upgrade, and live inspection.
                 </p>
               </div>
               <input
@@ -446,10 +1071,15 @@ export const AppWorkbench: React.FC<AppWorkbenchProps> = ({
                   </div>
                   <button
                     type="button"
-                    onClick={() => onJumpToComponent(spec)}
+                    onClick={() => {
+                      const foundUnified = UNIFIED_COMPONENTS_351.find((c) => c.id === spec.id);
+                      if (foundUnified) {
+                        setActiveDocSpec(foundUnified);
+                      }
+                    }}
                     className="self-start inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-indigo-400 shrink-0 cursor-pointer"
                   >
-                    <span>Inspect Live</span>
+                    <span>Inspect Docs</span>
                     <ArrowUpRight className="w-3 h-3" />
                   </button>
                 </div>
@@ -459,190 +1089,160 @@ export const AppWorkbench: React.FC<AppWorkbenchProps> = ({
         )}
       </AnimatePresence>
 
-      {/* 3. LIVE COMPONENT SHOWCASE & INTERACTIVE PLAYGROUND */}
-      <Suspense fallback={<SectionSkeletonFallback label="Hydrating interactive component showcase batches..." />}>
-        <div id="interactive-playground" className="space-y-12">
-          {/* Category 1: Inputs */}
-          {(activeCategory === 'all' || activeCategory === 'inputs') && (
-            <section className="space-y-4">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono text-[11px] font-bold">
-                      BATCH 01
-                    </span>
-                    <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      Inputs &amp; Tactile Controls (14 Components)
-                    </h2>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Replaces notched outlines, ALL-CAPS buttons, and tiny steppers with zero-shift morphing and card selection modes.
-                  </p>
-                </div>
-                <span className="font-mono text-xs text-slate-400">#01 – #14</span>
-              </div>
-              <Category1Inputs />
-            </section>
-          )}
-
-          {/* Category 2: Data Display */}
-          {(activeCategory === 'all' || activeCategory === 'data-display') && (
-            <section className="space-y-4">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono text-[11px] font-bold">
-                      BATCH 02
-                    </span>
-                    <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      Data Display &amp; Enterprise Grids (9 Components)
-                    </h2>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Compact avatars, virtualized zero-layout-shift tables, magnetic chips, and keyboard-first inspection cards.
-                  </p>
-                </div>
-                <span className="font-mono text-xs text-slate-400">#15 – #23</span>
-              </div>
-              <Category2DataDisplay />
-            </section>
-          )}
-
-          {/* Category 3 & 4: Feedback & Dynamic Surfaces */}
-          {(activeCategory === 'all' || activeCategory === 'feedback' || activeCategory === 'surfaces') && (
-            <section className="space-y-4">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono text-[11px] font-bold">
-                      BATCH 03 &amp; 04
-                    </span>
-                    <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      Feedback &amp; Dynamic Surfaces (11 Components)
-                    </h2>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Stacked Sonner-style 3D spatial toast notifications, spring dialog sheets, fluid accordions, and tactile Bento spotlight cards.
-                  </p>
-                </div>
-                <span className="font-mono text-xs text-slate-400">#24 – #34</span>
-              </div>
-              <Category3And4FeedbackSurfaces
-                activeCategoryFilter={
-                  activeCategory === 'feedback'
-                    ? 'feedback'
-                    : activeCategory === 'surfaces'
-                    ? 'surfaces'
-                    : 'all'
-                }
-              />
-            </section>
-          )}
-
-          {/* Category 5 & 6: Navigation, Bento Layouts & Lab Primitives */}
-          {(activeCategory === 'all' || activeCategory === 'navigation' || activeCategory === 'layout-utils') && (
-            <section className="space-y-4">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono text-[11px] font-bold">
-                      BATCH 05 &amp; 06
-                    </span>
-                    <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      Navigation, Bento Layouts &amp; Lab Primitives (16 Components)
-                    </h2>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Floating mobile pill docks, collapsible breadcrumbs, vertical desktop navigation rails, asymmetric Bento grids, and audit timelines.
-                  </p>
-                </div>
-                <span className="font-mono text-xs text-slate-400">#35 – #50</span>
-              </div>
-              <Category5And6NavLayout
-                activeCategoryFilter={
-                  activeCategory === 'navigation'
-                    ? 'navigation'
-                    : activeCategory === 'layout-utils'
-                    ? 'layout-utils'
-                    : 'all'
-                }
-              />
-            </section>
-          )}
-
-          {/* Category 7: JXUI X Enterprise */}
-          {(activeCategory === 'all' || activeCategory === 'enterprise-x') && (
-            <section className="space-y-4">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono text-[11px] font-bold">
-                      BATCH 07
-                    </span>
-                    <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      JXUI X — Enterprise Suite (5 Flagship Suites)
-                    </h2>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Notion/Linear hybrid DataGrid, Natural Language DateRangePicker, interactive SVG telemetry charts, TreeView explorer, and Slash Editor.
-                  </p>
-                </div>
-                <span className="font-mono text-xs text-slate-400">#51 – #55</span>
-              </div>
-              <Category7EnterpriseX />
-            </section>
-          )}
-
-          {/* Category 8: Signature Composed Blocks */}
-          {(activeCategory === 'all' || activeCategory === 'signature-blocks') && (
-            <section className="space-y-4">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono text-[11px] font-bold">
-                      BATCH 08
-                    </span>
-                    <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      Signature Composed Blocks &amp; Next-Gen Elements (6 Hero Blocks)
-                    </h2>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Multi-component compositions built from @jxui/react primitives: proximity-magnified floating glass docks, SaaS pricing matrices, canary traffic splitters, 48-bar audio scrubbers, and FIDO2 passkey vaults.
-                  </p>
-                </div>
-                <span className="font-mono text-xs text-slate-400">#56 – #61</span>
-              </div>
-              <Category8SignatureBlocks />
-            </section>
-          )}
-        </div>
-      </Suspense>
-
-      {/* 351 Master Component Suite Explorer (18 Categories • Showcases + Primitives) */}
-      <Suspense fallback={<SectionSkeletonFallback label="Loading 351 Component Suite Explorer..." />}>
-        <JX290LibraryExplorer
-          initialCategoryId={selectedExplorerCatId}
-          initialComponentId={selectedExplorerCompId}
-          onJumpToShowcase={(specNumber) => {
-            const spec = COMPONENT_CATALOG.find((s) => s.number === specNumber);
-            if (spec) onJumpToComponent(spec);
-          }}
-        />
-      </Suspense>
-
-      {/* Design Token Exporter Module */}
-      <Suspense fallback={null}>
+      {/* 7. DESIGN TOKEN EXPORTER MODULE */}
+      <Suspense fallback={<SectionSkeletonFallback label="Loading Design Token Exporter Studio..." />}>
         <div id="jx-design-token-exporter" className="scroll-mt-20">
           <DesignTokenExporter />
         </div>
       </Suspense>
 
-      {/* Accessibility & ARIA Standards WCAG 2.1 AA Checklist */}
-      <Suspense fallback={null}>
+      {/* 8. ACCESSIBILITY & ARIA STANDARDS WCAG 2.1 AA CHECKLIST */}
+      <Suspense fallback={<SectionSkeletonFallback label="Loading Accessibility & ARIA Matrix..." />}>
         <div id="jx-accessibility-aria-standards" className="scroll-mt-20">
           <AccessibilityAriaSection onJumpToComponent={onJumpToComponent} />
         </div>
       </Suspense>
+
+      {/* COMPONENT DOCUMENTATION MODAL */}
+      {activeDocSpec && (
+        <ComponentDocumentationModal
+          spec={activeDocSpec}
+          onClose={() => setActiveDocSpec(null)}
+          collectionsState={collectionsState}
+          onUpdateCollectionsState={onUpdateCollectionsState}
+          onJumpToShowcase={onJumpToComponent ? () => {
+            const s = COMPONENT_CATALOG.find((c) => c.number === activeDocSpec.showcaseNumber);
+            if (s) onJumpToComponent(s);
+          } : undefined}
+        />
+      )}
+
+      {/* MANAGE COLLECTIONS MODAL */}
+      {showManageCollections && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="collections-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
+        >
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white ${palette.bg}`}>
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 id="collections-modal-title" className="text-base font-bold text-slate-900 dark:text-white">
+                    Collections &amp; Bookmarks
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Organize components into custom workspace collections
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowManageCollections(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Create new collection */}
+            <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Create New Collection
+              </span>
+              <input
+                type="text"
+                value={newCollectionName}
+                onChange={(e) => setNewCollectionName(e.target.value)}
+                placeholder="Collection name (e.g. Design System V1)"
+                className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none"
+              />
+              <input
+                type="text"
+                value={newCollectionDesc}
+                onChange={(e) => setNewCollectionDesc(e.target.value)}
+                placeholder="Description (optional)"
+                className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleCreateCollection}
+                disabled={!newCollectionName.trim()}
+                className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Create Collection</span>
+              </button>
+            </div>
+
+            {/* Existing Collections List */}
+            <div className="space-y-2 max-h-52 overflow-y-auto">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Your Collections ({collectionsState.collections.length})
+              </span>
+              <div className="space-y-1.5">
+                {collectionsState.collections.map((col) => (
+                  <div
+                    key={col.id}
+                    className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div>
+                      <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>{col.name}</span>
+                        <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                          {col.componentIds.length} items
+                        </span>
+                      </h4>
+                      {col.description && (
+                        <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                          {col.description}
+                        </p>
+                      )}
+                    </div>
+                    {!col.isDefault && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCollection(col.id, col.name)}
+                        title="Delete collection"
+                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Export & Import JSON Footer */}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+              <button
+                type="button"
+                onClick={handleExportCollections}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer font-medium"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export JSON</span>
+              </button>
+
+              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer font-medium">
+                <Upload className="w-3.5 h-3.5" />
+                <span>Import JSON</span>
+                <input
+                  type="file"
+                  accept="application/json"
+                  onChange={handleImportCollections}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };
