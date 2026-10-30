@@ -104,13 +104,60 @@ interface JXThemeContextValue {
   clearToasts: () => void;
 }
 
+function getInitialThemeMode(): ThemeMode {
+  if (typeof window === 'undefined') return 'light';
+  try {
+    const saved = localStorage.getItem('jxui-theme-mode');
+    if (saved === 'light' || saved === 'dark') return saved;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+  } catch {
+    // ignore
+  }
+  return 'light';
+}
+
+function getInitialAccent(): AccentColor {
+  if (typeof window === 'undefined') return 'indigo';
+  try {
+    const saved = localStorage.getItem('jxui-theme-accent') as AccentColor;
+    if (saved && ACCENT_PALETTES[saved]) return saved;
+  } catch {
+    // ignore
+  }
+  return 'indigo';
+}
+
+function getInitialRadius(): RadiusScale {
+  if (typeof window === 'undefined') return 'lg';
+  try {
+    const saved = localStorage.getItem('jxui-theme-radius') as RadiusScale;
+    if (['sharp', 'sm', 'md', 'lg', 'xl'].includes(saved)) return saved;
+  } catch {
+    // ignore
+  }
+  return 'lg';
+}
+
+function getInitialCompareMode(): CompareMode {
+  if (typeof window === 'undefined') return 'jxui';
+  try {
+    const saved = localStorage.getItem('jxui-theme-compare') as CompareMode;
+    if (saved === 'jxui' || saved === 'split') return saved;
+  } catch {
+    // ignore
+  }
+  return 'jxui';
+}
+
 const JXThemeContext = createContext<JXThemeContextValue | null>(null);
 
 export const JXThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [mode, setMode] = useState<ThemeMode>('light');
-  const [accent, setAccent] = useState<AccentColor>('indigo');
-  const [radiusScale, setRadiusScale] = useState<RadiusScale>('lg');
-  const [compareMode, setCompareMode] = useState<CompareMode>('jxui');
+  const [mode, setMode] = useState<ThemeMode>(getInitialThemeMode);
+  const [accent, setAccent] = useState<AccentColor>(getInitialAccent);
+  const [radiusScale, setRadiusScale] = useState<RadiusScale>(getInitialRadius);
+  const [compareMode, setCompareMode] = useState<CompareMode>(getInitialCompareMode);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [stackHovered, setStackHovered] = useState(false);
 
@@ -121,7 +168,36 @@ export const JXThemeProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } else {
       root.classList.remove('dark');
     }
+    try {
+      localStorage.setItem('jxui-theme-mode', mode);
+    } catch {
+      // ignore
+    }
   }, [mode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('jxui-theme-accent', accent);
+    } catch {
+      // ignore
+    }
+  }, [accent]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('jxui-theme-radius', radiusScale);
+    } catch {
+      // ignore
+    }
+  }, [radiusScale]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('jxui-theme-compare', compareMode);
+    } catch {
+      // ignore
+    }
+  }, [compareMode]);
 
   const toggleMode = useCallback(() => {
     setMode((prev) => (prev === 'light' ? 'dark' : 'light'));

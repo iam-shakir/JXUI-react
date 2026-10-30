@@ -384,5 +384,24 @@ test('Favorites & Collections Engine: manages bookmarks, custom collections, and
   assert.deepEqual(deserialized, initial);
 });
 
+test('URL Deep Linking: correctly parses and serializes view, doc, cat, and collection params', () => {
+  const url = new URL('https://jxui.design/?view=github-page&doc=jx-data-grid&cat=data-grid-tables&collection=enterprise-core');
+  
+  assert.equal(url.searchParams.get('view'), 'github-page');
+  assert.equal(url.searchParams.get('doc'), 'jx-data-grid');
+  assert.equal(url.searchParams.get('cat'), 'data-grid-tables');
+  assert.equal(url.searchParams.get('collection'), 'enterprise-core');
+
+  // Verify component exists in UNIFIED_COMPONENTS_351
+  const docComp = UNIFIED_COMPONENTS_351.find((c) => c.id === url.searchParams.get('doc'));
+  assert.ok(docComp);
+  assert.equal(docComp?.name, 'JXDataGrid');
+
+  // Verify mutating search parameters
+  url.searchParams.delete('doc');
+  url.searchParams.set('cat', 'inputs-selection');
+  assert.equal(url.searchParams.get('doc'), null);
+  assert.equal(url.searchParams.get('cat'), 'inputs-selection');
+});
 
 

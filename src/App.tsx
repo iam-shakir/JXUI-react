@@ -161,9 +161,30 @@ const WorkbenchShell: React.FC = () => {
   const [copiedInstall, setCopiedInstall] = useState(false);
   const [springPressActive, setSpringPressActive] = useState(true);
   const [haloFocusActive, setHaloFocusActive] = useState(true);
-  const [currentView, setCurrentView] = useState<'workbench' | 'github-page'>('workbench');
+  const [currentView, setCurrentView] = useState<'workbench' | 'github-page'>(() => {
+    if (typeof window !== 'undefined') {
+      const v = new URLSearchParams(window.location.search).get('view');
+      if (v === 'github-page' || v === 'workbench') return v;
+    }
+    return 'workbench';
+  });
   const [selectedExplorerCompId, setSelectedExplorerCompId] = useState<string | undefined>();
   const [selectedExplorerCatId, setSelectedExplorerCatId] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const url = new URL(window.location.href);
+      if (currentView === 'github-page') {
+        url.searchParams.set('view', 'github-page');
+      } else {
+        url.searchParams.delete('view');
+      }
+      window.history.replaceState(null, '', url.toString());
+    } catch {
+      // ignore
+    }
+  }, [currentView]);
 
   const handleSelect290Component = (item: ComponentSpec290) => {
     setActiveCategory('all');

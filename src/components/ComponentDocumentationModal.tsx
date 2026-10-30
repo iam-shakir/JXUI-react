@@ -19,7 +19,8 @@ import {
   Layers,
   ArrowRight,
   ExternalLink,
-  Plus
+  Plus,
+  Share2
 } from 'lucide-react';
 
 interface ComponentDocumentationModalProps {
@@ -88,6 +89,21 @@ export const ComponentDocumentationModal: React.FC<ComponentDocumentationModalPr
       description: `<${spec.name} /> added to "${colName}"`,
       variant: 'success',
     });
+  };
+
+  const handleCopyShareLink = () => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('doc', spec.id);
+      navigator.clipboard.writeText(url.toString());
+      pushToast({
+        title: 'Deep Link Copied',
+        description: `Direct shareable link for <${spec.name} /> copied to clipboard`,
+        variant: 'success',
+      });
+    } catch {
+      // fallback
+    }
   };
 
   return (
@@ -175,6 +191,16 @@ export const ComponentDocumentationModal: React.FC<ComponentDocumentationModalPr
                 </div>
               )}
             </div>
+
+            {/* Shareable Deep Link */}
+            <button
+              type="button"
+              onClick={handleCopyShareLink}
+              title="Copy deep link to this component"
+              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
 
             {/* Close Button */}
             <button

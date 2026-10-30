@@ -88,6 +88,45 @@ export const JX290LibraryExplorer: React.FC<JX290LibraryExplorerProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
+  // Read and initialize from URL query parameters on initial mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlDoc = params.get('doc');
+      const urlCat = params.get('cat');
+      const urlComp = params.get('comp');
+      const urlCol = params.get('collection');
+
+      if (urlDoc) {
+        const found = UNIFIED_COMPONENTS_351.find((c) => c.id === urlDoc);
+        if (found) {
+          setActiveDocSpec(found);
+        }
+      }
+      if (urlCat) {
+        setSelectedCatId(urlCat);
+      }
+      if (urlCol) {
+        setCollectionFilter(urlCol);
+      }
+      if (urlComp && !initialComponentId) {
+        const comp = UNIFIED_COMPONENTS_351.find((c) => c.id === urlComp);
+        if (comp) {
+          setSelectedCatId(comp.categoryId);
+          setHighlightedId(comp.id);
+          setTimeout(() => {
+            const el = document.getElementById(`spec-${comp.id}`);
+            el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 240);
+          setTimeout(() => setHighlightedId(null), 3000);
+        }
+      }
+    } catch {
+      // fallback
+    }
+  }, []);
+
   // Sync initial props
   useEffect(() => {
     if (initialComponentId) {
@@ -108,6 +147,35 @@ export const JX290LibraryExplorer: React.FC<JX290LibraryExplorerProps> = ({
       setSelectedCatId(initialCategoryId);
     }
   }, [initialCategoryId, initialComponentId]);
+
+  // Synchronize state with URL query parameters without reloading
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const url = new URL(window.location.href);
+      if (activeDocSpec) {
+        url.searchParams.set('doc', activeDocSpec.id);
+      } else {
+        url.searchParams.delete('doc');
+      }
+
+      if (selectedCatId && selectedCatId !== 'all') {
+        url.searchParams.set('cat', selectedCatId);
+      } else {
+        url.searchParams.delete('cat');
+      }
+
+      if (collectionFilter && collectionFilter !== 'all') {
+        url.searchParams.set('collection', collectionFilter);
+      } else {
+        url.searchParams.delete('collection');
+      }
+
+      window.history.replaceState(null, '', url.toString());
+    } catch {
+      // fallback
+    }
+  }, [activeDocSpec, selectedCatId, collectionFilter]);
 
   // Reset pagination when filters change
   useEffect(() => {
