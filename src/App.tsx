@@ -277,9 +277,11 @@ const WorkbenchShell: React.FC = () => {
         {/* Brand Header */}
         <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-              JX
-            </div>
+            <img
+              src="./favicon.png"
+              alt="JXUI Logo"
+              className="w-9 h-9 rounded-xl object-contain shadow-sm ring-1 ring-slate-200/80 dark:ring-slate-800 bg-slate-950/5 dark:bg-white/5"
+            />
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-sm tracking-tight text-slate-900 dark:text-white">

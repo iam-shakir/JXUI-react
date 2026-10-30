@@ -118,7 +118,12 @@ export const GitHubPage: React.FC<GitHubPageProps> = ({
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
           {/* Breadcrumbs & Public Badge */}
           <div className="flex items-center gap-2 text-sm sm:text-base">
-            <Github className="w-6 h-6 text-white shrink-0" />
+            <img
+              src="./favicon.png"
+              alt="JXUI Logo"
+              className="w-5 h-5 rounded-md object-contain shrink-0 ring-1 ring-white/10"
+            />
+            <Github className="w-5 h-5 text-white shrink-0" />
             <a
               href="https://github.com/iam-shakir"
               target="_blank"
@@ -284,6 +289,16 @@ export const GitHubPage: React.FC<GitHubPageProps> = ({
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#1f6feb]/10 text-[#58a6ff] border border-[#1f6feb]/30 mb-6 shadow-xs">
             <Sparkles className="w-3.5 h-3.5" />
             <span>JXUI v2.4.0 — Unified 361-Component Architecture is Live</span>
+          </div>
+
+          {/* Official 3D Glassmorphic Logo Emblem */}
+          <div className="mb-6 relative flex items-center justify-center">
+            <div className="absolute -inset-4 bg-indigo-500/25 rounded-full blur-2xl pointer-events-none" />
+            <img
+              src="./logo.png"
+              alt="JXUI Brand Logo"
+              className="relative w-32 h-32 sm:w-40 sm:h-40 object-contain drop-shadow-[0_20px_35px_rgba(79,70,229,0.35)] hover:scale-105 transition-transform duration-300"
+            />
           </div>
 
           {/* Hero Headline */}

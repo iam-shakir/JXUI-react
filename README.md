@@ -1,7 +1,7 @@
 # JXUI (`@jxui/react`)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/sparkles.svg" width="64" height="64" alt="JXUI Logo" />
+  <img src="./public/logo.png" width="160" alt="JXUI Logo" />
 </p>
 
 <h3 align="center">Next-Generation React 19 Component Library &amp; Interactive Design System Workbench</h3>
