@@ -1,5 +1,5 @@
 {
-  "name": "@jxui/react",
+  "name": "jxui-react",
   "version": "2.4.0",
   "description": "Next-generation React 19 component library and design system reimagining Material UI with zero-runtime CSS, 200ms spring physics, and 100% WCAG AA compliance across 351 unified components.",
   "keywords": [

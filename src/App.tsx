@@ -126,11 +126,11 @@ const WorkbenchShell: React.FC = () => {
   }, [mobileSidebarOpen]);
 
   const handleCopyInstall = () => {
-    navigator.clipboard?.writeText('npm i @jxui/react').catch(() => {});
+    navigator.clipboard?.writeText('npm i jxui-react').catch(() => {});
     setCopiedInstall(true);
     pushToast({
       title: 'Copied installation command',
-      description: '$ npm i @jxui/react copied to clipboard',
+      description: '$ npm i jxui-react copied to clipboard',
       variant: 'success',
     });
     setTimeout(() => setCopiedInstall(false), 2000);

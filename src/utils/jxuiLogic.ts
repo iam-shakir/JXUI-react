@@ -261,7 +261,7 @@ export function formatCopyableJsxCode(
 
   const importStatement =
     uniqueTags.length > 0
-      ? `import { ${uniqueTags.join(', ')} } from '@jxui/react';\n\n`
+      ? `import { ${uniqueTags.join(', ')} } from 'jxui-react';\n\n`
       : '';
 
   return `${importStatement}${trimmed}`;

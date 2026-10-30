@@ -266,8 +266,8 @@ function deriveMetadata(
       ? ['grid', 'row', 'gridcell']
       : ['region', 'group'],
     dependencies: lowerName.includes('motion') || tier === 'showcase'
-      ? ['@jxui/react', 'motion/react', 'lucide-react']
-      : ['@jxui/react', 'lucide-react'],
+      ? ['jxui-react', 'motion/react', 'lucide-react']
+      : ['jxui-react', 'lucide-react'],
     maturity: tier === 'showcase' ? 'Production Ready' : 'Stable',
     responsive: {
       mobile: true,
@@ -347,8 +347,8 @@ function deriveMetadata(
 
   const doc: ComponentDocSpec = {
     summary: `${name} is an enterprise-grade ${tier} component engineered with tactile physics, specular glass aesthetics, and guaranteed zero cumulative layout shift (CLS = 0).`,
-    installation: `npm install @jxui/react motion lucide-react`,
-    usageCode: jsxSnippet || `import { ${name} } from '@jxui/react';\n\nexport default function Example() {\n  return (\n    <${name} variant="glass" size="md" />\n  );\n}`,
+    installation: `npm install jxui-react motion lucide-react`,
+    usageCode: jsxSnippet || `import { ${name} } from 'jxui-react';\n\nexport default function Example() {\n  return (\n    <${name} variant="glass" size="md" />\n  );\n}`,
     props,
     accessibilityNotes: [
       `100% compliant with WCAG 2.1 AA/AAA criteria with contrast exceeding 7.0:1.`,

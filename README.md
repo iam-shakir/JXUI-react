@@ -1,4 +1,4 @@
-# JXUI (`@jxui/react`)
+# JXUI (`jxui-react`)
 
 <p align="center">
   <img src="./public/logo.png" width="160" alt="JXUI Logo" />
@@ -41,16 +41,16 @@ Install via your preferred package manager:
 
 ```bash
 # npm
-npm install @jxui/react motion lucide-react
+npm install jxui-react motion lucide-react
 
 # pnpm
-pnpm add @jxui/react motion lucide-react
+pnpm add jxui-react motion lucide-react
 
 # yarn
-yarn add @jxui/react motion lucide-react
+yarn add jxui-react motion lucide-react
 
 # bun
-bun add @jxui/react motion lucide-react
+bun add jxui-react motion lucide-react
 ```
 
 ### Basic Usage
@@ -59,8 +59,8 @@ Wrap your application in `JXThemeProvider` to enable dynamic token synthesis, el
 
 ```tsx
 import React from 'react';
-import { JXThemeProvider, useJXTheme } from '@jxui/react';
-import { TiltCard, LiquidButton, SignaturePad } from '@jxui/react';
+import { JXThemeProvider, useJXTheme } from 'jxui-react';
+import { TiltCard, LiquidButton, SignaturePad } from 'jxui-react';
 
 export function App() {
   return (
@@ -110,7 +110,7 @@ JXUI features 18 unified categories combining interactive showcases and modular 
 
 ## ⚖️ JXUI vs Material UI (MUI) Benchmark
 
-| Ergonomic Feature | Material UI (Core / Lab / X) | JXUI (@jxui/react) |
+| Ergonomic Feature | Material UI (Core / Lab / X) | JXUI (jxui-react) |
 | :--- | :--- | :--- |
 | **Cumulative Layout Shift** | High: Spinner/text swaps pop button dimensions | **CLS = 0**: State morphing maintains exact bounding box |
 | **Surface Physics** | Flat Android 5 ink ripple with linear easing | **Tactile Spring**: Proximity pull, velocity scaling, 3D tilt |

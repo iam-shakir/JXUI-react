@@ -10,3 +10,4 @@ coverage/
 .agents
 dist.zip
 *.tgz
+.npmrc

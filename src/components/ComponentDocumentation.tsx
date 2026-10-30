@@ -54,7 +54,7 @@ export const ComponentDocumentation: React.FC<ComponentDocumentationProps> = ({
     setCopied(true);
     pushToast({
       title: `Copied ${spec.name} JSX`,
-      description: 'Formatted @jxui/react code copied to clipboard',
+      description: 'Formatted jxui-react code copied to clipboard',
       variant: 'success',
     });
     setTimeout(() => setCopied(false), 1800);
@@ -223,7 +223,7 @@ export const ComponentDocumentation: React.FC<ComponentDocumentationProps> = ({
               <span className="font-semibold text-indigo-600 dark:text-indigo-400">
                 JXUI Enhanced Interactive Surface
               </span>
-              <span className="font-mono">@jxui/react</span>
+              <span className="font-mono">jxui-react</span>
             </div>
             {children}
           </div>
@@ -264,7 +264,7 @@ export const ComponentDocumentation: React.FC<ComponentDocumentationProps> = ({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[11px] font-mono text-slate-400">
-                    @jxui/react · Copy-Pasteable TypeScript JSX
+                    jxui-react · Copy-Pasteable TypeScript JSX
                   </span>
                   <button
                     type="button"

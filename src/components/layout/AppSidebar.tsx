@@ -105,7 +105,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                   v2.4.0
                 </span>
               </div>
-              <span className="font-mono text-[11px] text-slate-400">@jxui/react · 351 Primitives</span>
+              <span className="font-mono text-[11px] text-slate-400">jxui-react · 351 Primitives</span>
             </div>
           </div>
           <button

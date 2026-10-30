@@ -116,7 +116,7 @@ test('formatCopyableJsxCode extracts JXUI component imports and formats JSX clea
     'JXAccordion',
     true
   );
-  assert.ok(formatted.startsWith("import { JXAccordion } from '@jxui/react';"));
+  assert.ok(formatted.startsWith("import { JXAccordion } from 'jxui-react';"));
   assert.ok(formatted.includes('<JXAccordion variant="bento" iconMode="plus-cross" />'));
 
   const withoutImports = formatCopyableJsxCode(
