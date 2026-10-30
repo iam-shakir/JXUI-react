@@ -1,32 +1,62 @@
 {
   "name": "@jxui/react",
   "version": "2.4.0",
-  "description": "Next-generation React + TypeScript component library and interactive workbench reimagining every Material UI component.",
+  "description": "Next-generation React 19 component library and design system reimagining Material UI with zero-runtime CSS, 200ms spring physics, and 100% WCAG AA compliance across 351 unified components.",
+  "keywords": [
+    "react",
+    "react-19",
+    "components",
+    "design-system",
+    "material-ui",
+    "mui-replacement",
+    "tailwind",
+    "typescript",
+    "ui-library",
+    "zero-runtime-css",
+    "wcag",
+    "glassmorphism",
+    "interactive-components"
+  ],
+  "author": "Shakir (https://github.com/iam-shakir)",
+  "license": "MIT",
   "homepage": "https://iam-shakir.github.io/JXUI-react/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iam-shakir/JXUI-react.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iam-shakir/JXUI-react/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist-lib/index.cjs",
   "module": "./dist-lib/index.mjs",
-  "types": "./dist-lib/types/src/index.d.ts",
+  "types": "./dist-lib/types/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist-lib/index.mjs",
       "require": "./dist-lib/index.cjs",
-      "types": "./dist-lib/types/src/index.d.ts"
+      "types": "./dist-lib/types/index.d.ts"
     }
   },
   "files": [
     "dist-lib",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "build:site": "vite build",
-    "build:lib": "vite build --config vite.lib.config.ts",
+    "build:types": "tsc -p tsconfig.lib.json",
+    "build:lib": "vite build --config vite.lib.config.ts && npm run build:types",
     "preview": "vite preview",
     "clean": "rm -rf dist dist-lib server.js",
     "lint": "tsc --noEmit",
     "test": "tsx --test src/utils/jxuiLogic.test.ts",
+    "prepublishOnly": "npm run test && npm run build:lib",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
