@@ -42,6 +42,9 @@ jobs:
       - name: Build Production Bundle
         run: npm run build
 
+      - name: Build Distributable NPM Library
+        run: npm run build:lib
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

@@ -1,18 +1,40 @@
 {
-  "name": "react-example",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@jxui/react",
+  "version": "2.4.0",
+  "description": "Next-generation React + TypeScript component library and interactive workbench reimagining every Material UI component.",
   "homepage": "https://iam-shakir.github.io/JXUI-react/",
+  "main": "./dist-lib/index.cjs",
+  "module": "./dist-lib/index.mjs",
+  "types": "./dist-lib/types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist-lib/index.mjs",
+      "require": "./dist-lib/index.cjs",
+      "types": "./dist-lib/types/src/index.d.ts"
+    }
+  },
+  "files": [
+    "dist-lib",
+    "README.md"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "build:site": "vite build",
+    "build:lib": "vite build --config vite.lib.config.ts",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "rm -rf dist dist-lib server.js",
     "lint": "tsc --noEmit",
     "test": "tsx --test src/utils/jxuiLogic.test.ts",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
+  },
+  "peerDependencies": {
+    "lucide-react": ">=0.400.0",
+    "motion": ">=11.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

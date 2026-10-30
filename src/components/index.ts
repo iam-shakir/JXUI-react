@@ -16,7 +16,14 @@ export * from './library';
 
 // --- Interactive Workbench & Documentation Tooling ---
 export * from './ComponentDocumentation';
+export * from './ComponentDocumentationModal';
+export * from './InteractiveComponentPreview';
 export * from './CommandFinderModal';
 export * from './DesignTokenExporter';
 export * from './AccessibilityAriaSection';
 export * from './JX290LibraryExplorer';
+export * from './GitHubPage';
+export * from './layout/AppHeader';
+export * from './layout/AppSidebar';
+export * from './layout/AppWorkbench';
+
