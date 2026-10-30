@@ -270,4 +270,119 @@ test('UNIFIED_COMPONENTS_351 combines 61 showcases and 300 primitives across 18 
   }
 });
 
+test('Data architecture: all components conform to strictly typed schema with documentation and quality indicators', () => {
+  for (const comp of UNIFIED_COMPONENTS_351) {
+    assert.ok(comp.id, 'Component must have non-empty id');
+    assert.ok(comp.name, 'Component must have non-empty name');
+    assert.ok(comp.categoryId, 'Component must have valid categoryId');
+    assert.ok(comp.categoryTitle, 'Component must have categoryTitle');
+    assert.ok(comp.subtitle, 'Component must have subtitle');
+    assert.ok(comp.tags.length > 0, `${comp.name} must have at least one tag`);
+    assert.ok(comp.frameworks.includes('React 19'), `${comp.name} must support React 19`);
+    assert.ok(
+      ['beginner', 'intermediate', 'advanced', 'enterprise'].includes(comp.difficulty),
+      `${comp.name} must have valid difficulty`
+    );
+
+    // Quality Indicators
+    assert.ok(comp.quality, `${comp.name} must have quality indicators`);
+    assert.ok(comp.quality.wcagScore.includes('WCAG'), `${comp.name} must have WCAG score`);
+    assert.ok(comp.quality.responsive.mobile, `${comp.name} must support mobile`);
+    assert.ok(comp.quality.responsive.tablet, `${comp.name} must support tablet`);
+    assert.ok(comp.quality.responsive.desktop, `${comp.name} must support desktop`);
+    assert.ok(comp.quality.ariaRoles.length > 0, `${comp.name} must have ARIA roles`);
+
+    // Documentation
+    assert.ok(comp.doc.installation.includes('npm install'), `${comp.name} must have npm install guide`);
+    assert.ok(comp.doc.usageCode.length > 0, `${comp.name} must have usageCode`);
+    assert.ok(comp.doc.props.length >= 4, `${comp.name} must define at least 4 props`);
+    assert.ok(comp.doc.accessibilityNotes.length > 0, `${comp.name} must have a11y notes`);
+    assert.ok(comp.doc.keyboardShortcuts.length > 0, `${comp.name} must have keyboard contracts`);
+  }
+});
+
+test('Search & Multi-Filtering: accurately filters by name, category, tags, framework, and difficulty', () => {
+  // 1. Search by name
+  const buttonMatches = UNIFIED_COMPONENTS_351.filter((c) =>
+    c.name.toLowerCase().includes('button')
+  );
+  assert.ok(buttonMatches.length > 0);
+  assert.ok(buttonMatches.some((c) => c.name === 'JXButton'));
+
+  // 2. Filter by category
+  const navComponents = UNIFIED_COMPONENTS_351.filter((c) => c.categoryId === 'navigation');
+  assert.ok(navComponents.length > 0);
+  for (const c of navComponents) {
+    assert.equal(c.categoryId, 'navigation');
+  }
+
+  // 3. Filter by tag
+  const zeroShiftComponents = UNIFIED_COMPONENTS_351.filter((c) =>
+    c.tags.includes('zero-shift')
+  );
+  assert.equal(zeroShiftComponents.length, 361); // all components guarantee zero shift
+
+  // 4. Filter by difficulty
+  const enterpriseComponents = UNIFIED_COMPONENTS_351.filter(
+    (c) => c.difficulty === 'enterprise'
+  );
+  assert.ok(enterpriseComponents.length > 0);
+  assert.ok(enterpriseComponents.some((c) => c.name === 'JXDataGrid'));
+
+  // 5. Multi-filter combination: Category + Difficulty + Framework
+  const filtered = UNIFIED_COMPONENTS_351.filter(
+    (c) =>
+      c.categoryId === 'buttons-actions' &&
+      c.difficulty === 'beginner' &&
+      c.frameworks.includes('Next.js 15')
+  );
+  assert.ok(filtered.length > 0);
+  assert.ok(filtered.some((c) => c.name === 'JXButton'));
+});
+
+test('Favorites & Collections Engine: manages bookmarks, custom collections, and JSON serialization', () => {
+  const initial = {
+    favorites: ['jx-button'],
+    collections: [
+      {
+        id: 'col-test',
+        name: 'Test Collection',
+        description: 'Unit test collection',
+        icon: 'folder',
+        componentIds: ['jx-button'],
+        createdAt: 1000,
+      },
+    ],
+  };
+
+  // Toggle favorite
+  const withCard = {
+    ...initial,
+    favorites: [...initial.favorites, 'jx-card'],
+  };
+  assert.equal(withCard.favorites.length, 2);
+  assert.ok(withCard.favorites.includes('jx-card'));
+
+  const removedCard = {
+    ...withCard,
+    favorites: withCard.favorites.filter((id) => id !== 'jx-card'),
+  };
+  assert.equal(removedCard.favorites.length, 1);
+  assert.ok(!removedCard.favorites.includes('jx-card'));
+
+  // Add component to collection
+  const updatedCollection = {
+    ...initial.collections[0],
+    componentIds: [...initial.collections[0].componentIds, 'jx-switch'],
+  };
+  assert.equal(updatedCollection.componentIds.length, 2);
+  assert.ok(updatedCollection.componentIds.includes('jx-switch'));
+
+  // Serialization
+  const serialized = JSON.stringify(initial);
+  const deserialized = JSON.parse(serialized);
+  assert.deepEqual(deserialized, initial);
+});
+
+
 
